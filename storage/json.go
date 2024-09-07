@@ -18,6 +18,7 @@ type Order struct {
 	IsPickedUp bool      `json:"pickedUp"`
 	PickUpTime time.Time `json:"pickUpTime"`
 	IsRefund   bool      `json:"refund"`
+	IsDeleted  bool      `json:"deleted"`
 }
 
 type Store struct {
@@ -82,12 +83,12 @@ func (s *Store) writeDataToFile() error {
 func (s *Store) GetOrderFromСourier(orderID, clientID int, storeUntil time.Time) (err error) {
 	for _, order := range s.Orders {
 		if orderID == order.ID {
-			return fmt.Errorf("Order already exist")
+			return fmt.Errorf("order already exist")
 		}
 	}
 
 	if storeUntil.Before(time.Now()) {
-		return fmt.Errorf("Order store time expired")
+		return fmt.Errorf("order store time expired")
 	}
 
 	s.Orders = append(s.Orders, Order{
@@ -110,14 +111,18 @@ func (s *Store) GiveOrderToCourier(orderID int) (err error) {
 		}
 
 		if order.IsPickedUp {
-			return fmt.Errorf("Order is picked up by client")
+			return fmt.Errorf("order is picked up by client")
 		}
 
 		if order.StoreUntil.After(time.Now()) {
-			return fmt.Errorf("Order store time is not expired yet")
+			return fmt.Errorf("order store time is not expired yet")
 		}
 
-		s.Orders = append(s.Orders[:i], s.Orders[i+1:]...)
+		if order.IsDeleted {
+			return fmt.Errorf("order already returned to courier")
+		}
+
+		s.Orders[i].IsDeleted = true
 		break
 	}
 
@@ -139,7 +144,10 @@ func (s *Store) GiveOrderToClient(orderIDs []int) (err error) {
 				continue
 			}
 
-			if order.StoreUntil.Before(time.Now()) || order.IsRefund || order.IsPickedUp {
+			if order.StoreUntil.Before(time.Now()) ||
+				order.IsRefund ||
+				order.IsPickedUp ||
+				order.IsDeleted {
 				continue
 			}
 
@@ -148,7 +156,7 @@ func (s *Store) GiveOrderToClient(orderIDs []int) (err error) {
 			}
 
 			if uniqueClientID != order.ClientID {
-				return fmt.Errorf("Orders does not belong to one person")
+				return fmt.Errorf("orders does not belong to one person")
 			}
 
 			orderIndexes = append(orderIndexes, i)
@@ -202,11 +210,11 @@ func (s *Store) GetRefundFromСlient(clientID, orderID int) (err error) {
 		}
 
 		if !order.IsPickedUp {
-			return fmt.Errorf("Order is not pick up yet")
+			return fmt.Errorf("order is not pick up yet")
 		}
 
 		if time.Now().After(order.PickUpTime.AddDate(0, 0, 2)) {
-			return fmt.Errorf("Time to refund already expired")
+			return fmt.Errorf("time to refund already expired")
 		}
 
 		s.Orders[i].IsRefund = true
@@ -218,7 +226,7 @@ func (s *Store) GetRefundFromСlient(clientID, orderID int) (err error) {
 		return nil
 	}
 
-	return fmt.Errorf("Order was picked up in another point")
+	return fmt.Errorf("order was picked up in another point")
 }
 
 func (s *Store) RefundList(limit, offset int) (err error) {
