@@ -18,5 +18,5 @@ func main() {
 	}()
 
 	<-stop
-	fmt.Println("\nShutting down gracefully...")
+	fmt.Println("\nExiting...")
 }

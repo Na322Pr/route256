@@ -31,8 +31,10 @@ to quickly create a Cobra application.`,
 var receiveOrderFromCourierCmd = &cobra.Command{
 	Use:   "receive-order",
 	Short: "Receive order from courier",
+	Long: `Usage: receive-order orderID clientID storeUntil
+Example: receive-order 1 1 2024-09-10 15:20:00
+	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Args in function:", args)
 		if len(args) != 4 {
 			fmt.Println("Incorrect args count. Expected 3 arguments: orderID clientID storeUntil")
 			return
@@ -66,6 +68,8 @@ var receiveOrderFromCourierCmd = &cobra.Command{
 var returnOrderToCourierCmd = &cobra.Command{
 	Use:   "return-order",
 	Short: "Return order to courier",
+	Long: `Usage: return-order orderID
+Example: return-order 1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("Incorrect args count. Expected 1 argument: orderID")
@@ -91,8 +95,9 @@ var returnOrderToCourierCmd = &cobra.Command{
 var giveOutOrderToClientCmd = &cobra.Command{
 	Use:   "give-out-order",
 	Short: "Give out order to client",
+	Long: `Usage: give-out-order [orderIDs...]
+Example: give-out-order 1 2 3 4`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Args in function:", args)
 		if len(args) < 1 {
 			fmt.Println("No arguments. Expected arguments: [orderIDs...]")
 			return
@@ -123,8 +128,10 @@ var giveOutOrderToClientCmd = &cobra.Command{
 var getOrderListCmd = &cobra.Command{
 	Use:   "order-list",
 	Short: "Get order list",
+	Long: `Usage: order-list clientID [lastCount]
+Example 1, return all orders:    order-list 10,
+Example 2, return n last orders: order-list 10 10`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Args in function:", args)
 		if len(args) < 1 || len(args) > 2 {
 			fmt.Println("Incorrect args count. Expected 2 arguments: clientID [lastCount]")
 			return
@@ -158,8 +165,9 @@ var getOrderListCmd = &cobra.Command{
 var refundFromCustomerCmd = &cobra.Command{
 	Use:   "refund",
 	Short: "Refund order",
+	Long: `Usage: refund clientID orderID
+Example: refund 10 12`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Args in function:", args)
 		if len(args) != 2 {
 			fmt.Println("Incorrect args count. Expected 2 arguments: clientID orderID")
 			return
@@ -190,8 +198,11 @@ var refundFromCustomerCmd = &cobra.Command{
 var getRefundListCmd = &cobra.Command{
 	Use:   "refund-list",
 	Short: "Get refund list",
+	Long: `Usage: refund-list [limit] [offset]
+Example 1, return all refunds: 			 order-list 10,
+Example 2, return n refunds: 			 order-list 10 10,
+Example 3, return n refunds with offset: order-list 10 10`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Args in function:", args)
 		if len(args) > 2 {
 			fmt.Println("Incorrect args count. Expected 2 or less arguments: [limit] [offset]")
 			return
@@ -252,7 +263,6 @@ func HandleUserInput() {
 
 			commandArgs := strings.Fields(input)
 			rootCmd.SetArgs(commandArgs)
-			fmt.Println(commandArgs)
 
 			if err := rootCmd.Execute(); err != nil {
 				fmt.Println("Error:", err)
