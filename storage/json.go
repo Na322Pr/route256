@@ -194,7 +194,7 @@ func (s *Store) OrderList(clientID int, params ...int) (err error) {
 		offset = params[0]
 	}
 
-	fmt.Println("Список заказов: ")
+	fmt.Println("Orders list: ")
 
 	for _, order := range orders[len(orders)-offset:] {
 		fmt.Println(order.ID)
@@ -230,6 +230,8 @@ func (s *Store) GetRefundFromСlient(clientID, orderID int) (err error) {
 }
 
 func (s *Store) RefundList(limit, offset int) (err error) {
+
+	fmt.Println("Refunds list: ")
 
 	cur_offset := 0
 	cur_limit := 0
