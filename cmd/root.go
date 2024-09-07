@@ -32,8 +32,7 @@ var receiveOrderFromCourierCmd = &cobra.Command{
 	Use:   "receive-order",
 	Short: "Receive order from courier",
 	Long: `Usage: receive-order orderID clientID storeUntil
-Example: receive-order 1 1 2024-09-10 15:20:00
-	`,
+Example: receive-order 1 1 2024-09-10 15:20:00`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 4 {
 			fmt.Println("Incorrect args count. Expected 3 arguments: orderID clientID storeUntil")
@@ -133,7 +132,7 @@ Example 1, return all orders:    order-list 10,
 Example 2, return n last orders: order-list 10 10`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 || len(args) > 2 {
-			fmt.Println("Incorrect args count. Expected 2 arguments: clientID [lastCount]")
+			fmt.Println("Incorrect args count. Expected 1-2 arguments: clientID [lastCount]")
 			return
 		}
 
