@@ -69,6 +69,10 @@ func NewOrder(id, clientID int, storeUntil time.Time) (*Order, error) {
 }
 
 func (o *Order) SetID(id int) error {
+	if id < 0 {
+		return fmt.Errorf("invalid ID")
+	}
+
 	o.id = id
 	return nil
 }
