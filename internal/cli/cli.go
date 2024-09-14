@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"bufio"
@@ -9,12 +9,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/marchenkosasha2/homework/storage"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 )
 
 var (
-	store *storage.Store
-	err   error
+	orderUC *usecase.OrderUseCase
+	err     error
 )
 
 var rootCmd = &cobra.Command{
@@ -54,7 +55,13 @@ Example: receive-order 1 1 2024-09-10 15:20:00`,
 			fmt.Println("storeUntil is incorrect")
 		}
 
-		err = store.GetOrderFromСourier(orderID, clientID, storeUntil)
+		req := &dto.AddOrderRequest{
+			ID:         orderID,
+			ClientID:   clientID,
+			StoreUntil: storeUntil,
+		}
+
+		err = orderUC.ReceiveOrderFromCourier(req)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -81,7 +88,7 @@ Example: return-order 1`,
 			return
 		}
 
-		err = store.GiveOrderToCourier(orderID)
+		err = orderUC.ReturnOrderToCourier(orderID)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -114,7 +121,7 @@ Example: give-out-order 1 2 3 4`,
 			orderIDs = append(orderIDs, orderID)
 		}
 
-		err = store.GiveOrderToClient(orderIDs)
+		err := orderUC.GiveOrderToClient(orderIDs)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -139,25 +146,27 @@ Example 2, return n last orders: order-list 10 10`,
 		clientID, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Println("clientID is incorrect")
-		}
-
-		if len(args) == 2 {
-			lastCount, err := strconv.Atoi(args[1])
-			if err != nil {
-				fmt.Println("lastCount is incorrect")
-			}
-
-			err = store.OrderList(clientID, lastCount)
-			if err != nil {
-				fmt.Println(err)
-			}
 			return
 		}
 
-		err = store.OrderList(clientID)
+		// if len(args) == 2 {
+		// 	lastCount, err := strconv.Atoi(args[1])
+		// 	if err != nil {
+		// 		fmt.Println("lastCount is incorrect")
+		// 		return
+		// 	}
+		// }
+
+		orders, err := orderUC.OrderList(clientID)
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		fmt.Println("Order IDs list:")
+		for i, order := range orders.Orders {
+			fmt.Printf("%d:\t%d\n", i+1, order.ID)
+		}
+
 	},
 }
 
@@ -184,13 +193,13 @@ Example: refund 10 12`,
 			return
 		}
 
-		err = store.GetRefundFromСlient(clientID, orderID)
+		err = orderUC.GetRefundFromСlient(clientID, orderID)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		fmt.Println("Refund successfully")
+		fmt.Println("Product has been successfully returned")
 	},
 }
 
@@ -213,6 +222,7 @@ Example 3, return n refunds with offset: order-list 10 10`,
 			limit, err = strconv.Atoi(args[0])
 			if err != nil {
 				fmt.Println("limit is incorrect")
+				return
 			}
 		}
 
@@ -220,18 +230,25 @@ Example 3, return n refunds with offset: order-list 10 10`,
 			offset, err = strconv.Atoi(args[1])
 			if err != nil {
 				fmt.Println("offset is incorrect")
+				return
 			}
 		}
 
-		err = store.RefundList(limit, offset)
+		refunds, err := orderUC.RefundList(limit, offset)
 		if err != nil {
 			fmt.Println(err)
+			return
+		}
+
+		fmt.Println("Refund IDs list:")
+		for i, order := range refunds.Orders {
+			fmt.Printf("%d:\t%d\n", i+1, order.ID)
 		}
 	},
 }
 
-func Execute() {
-	store, err = storage.NewStore("storage/data.json")
+func Run(orderUseCase *usecase.OrderUseCase) {
+	orderUC = orderUseCase
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
