@@ -144,8 +144,6 @@ type Order struct {
 func NewOrder(orderDTO dto.AddOrder, packOpts ...PackageOption) (*Order, error) {
 	op := "Order.NewOrder"
 
-	fmt.Println(packOpts)
-
 	order := Order{}
 
 	if err := order.SetID(orderDTO.ID); err != nil {
