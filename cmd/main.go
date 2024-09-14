@@ -23,7 +23,6 @@ func main() {
 		return
 	}
 
-	// Check why does this sends out by pointer
 	orderUserCase := usecase.NewOrderUseCase(*orderRepository)
 
 	go func() {

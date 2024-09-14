@@ -40,7 +40,6 @@ func init() {
 	}
 }
 
-// Можно передвавать pickUpTime по ссылке
 type Order struct {
 	id         int
 	clientID   int
@@ -48,8 +47,6 @@ type Order struct {
 	status     OrderStatus
 	pickUpTime time.Time
 }
-
-// var OrderStatusDescriptions = map[OrderStatus]string{}
 
 func NewOrder(id, clientID int, storeUntil time.Time) (*Order, error) {
 
@@ -77,7 +74,6 @@ func (o *Order) SetID(id int) error {
 	return nil
 }
 
-// Можно проверить, что новый статус идет после старого
 func (o *Order) SetStatus(status OrderStatus) error {
 	o.status = status
 	return nil

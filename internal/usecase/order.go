@@ -59,7 +59,6 @@ func (uc *OrderUseCase) ReturnOrderToCourier(orderID int) error {
 	return nil
 }
 
-// Check and fix
 func (uc *OrderUseCase) GiveOrderToClient(orderIDs []int) error {
 	op := "OrderUseCase.GiveOrderToClient"
 
