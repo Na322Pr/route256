@@ -30,10 +30,10 @@ to quickly create a Cobra application.`,
 }
 
 var receiveOrderFromCourierCmd = &cobra.Command{
-	Use:   "receive-order",
+	Use:   "receive-courier",
 	Short: "Receive order from courier",
-	Long: `Usage: receive-order orderID clientID storeUntil
-Example: receive-order 1 1 2024-09-10 15:20:00`,
+	Long: `Usage: receive-courier orderID clientID storeUntil
+Example: receive-courier 1 1 2024-09-10 15:20:00`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 4 {
 			fmt.Println("Incorrect args count. Expected 3 arguments: orderID clientID storeUntil")
@@ -72,10 +72,10 @@ Example: receive-order 1 1 2024-09-10 15:20:00`,
 }
 
 var returnOrderToCourierCmd = &cobra.Command{
-	Use:   "return-order",
+	Use:   "return-courier",
 	Short: "Return order to courier",
-	Long: `Usage: return-order orderID
-Example: return-order 1`,
+	Long: `Usage: return-courier orderID
+Example: return-courier 1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("Incorrect args count. Expected 1 argument: orderID")
@@ -99,10 +99,10 @@ Example: return-order 1`,
 }
 
 var giveOutOrderToClientCmd = &cobra.Command{
-	Use:   "give-out-order",
+	Use:   "give-out-client",
 	Short: "Give out order to client",
-	Long: `Usage: give-out-order [orderIDs...]
-Example: give-out-order 1 2 3 4`,
+	Long: `Usage: give-out-client [orderIDs...]
+Example: give-out-client 1 2 3 4`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Println("No arguments. Expected arguments: [orderIDs...]")
@@ -171,10 +171,10 @@ Example 2, return n last orders: order-list 10 10`,
 }
 
 var refundFromCustomerCmd = &cobra.Command{
-	Use:   "refund",
-	Short: "Refund order",
-	Long: `Usage: refund clientID orderID
-Example: refund 10 12`,
+	Use:   "refund-client",
+	Short: "Refund order from client",
+	Long: `Usage: refund-client clientID orderID
+Example: refund-client 10 12`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 2 {
 			fmt.Println("Incorrect args count. Expected 2 arguments: clientID orderID")
