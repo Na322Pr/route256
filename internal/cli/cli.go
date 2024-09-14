@@ -32,33 +32,59 @@ to quickly create a Cobra application.`,
 var receiveOrderFromCourierCmd = &cobra.Command{
 	Use:   "receive-courier",
 	Short: "Receive order from courier",
-	Long: `Usage: receive-courier orderID clientID storeUntil
-Example: receive-courier 1 1 2024-09-10 15:20:00`,
+	Long: `Usage: receive-courier orderID clientID storeUntil cost weight [package1] [package2]
+Example: receive-courier 1 1 2024-10-01 15:20:00 7 1200 bag tape`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 4 {
-			fmt.Println("Incorrect args count. Expected 3 arguments: orderID clientID storeUntil")
+		minArgsCount := 6
+		maxArgsCount := 8
+
+		if len(args) < minArgsCount || len(args) > maxArgsCount {
+			fmt.Println("Incorrect args count")
 			return
 		}
 
-		orderID, err := strconv.Atoi(args[0])
-		if err != nil {
+		var orderID, clientID, cost, weight int
+		var storeUntil time.Time
+
+		if orderID, err = strconv.Atoi(args[0]); err != nil {
 			fmt.Println("orderID is incorrect")
 		}
 
-		clientID, err := strconv.Atoi(args[1])
-		if err != nil {
+		if clientID, err = strconv.Atoi(args[1]); err != nil {
 			fmt.Println("clientID is incorrect")
 		}
 
-		storeUntil, err := time.Parse("2006-01-02 15:04:05", args[2]+" "+args[3])
+		if storeUntil, err = time.Parse("2006-01-02 15:04:05", args[2]+" "+args[3]); err != nil {
+			fmt.Println("storeUntil is incorrect")
+		}
+
+		cost, err = strconv.Atoi(args[4])
 		if err != nil {
 			fmt.Println("storeUntil is incorrect")
 		}
 
-		req := &dto.AddOrderRequest{
+		weight, err := strconv.Atoi(args[5])
+		if err != nil {
+			fmt.Println("storeUntil is incorrect")
+		}
+
+		packages := []string{"unknown", "unknown"}
+
+		if len(args) >= 7 {
+			packages[0] = args[6]
+		}
+
+		if len(args) == 8 {
+			packages[1] = args[7]
+		}
+
+		req := dto.AddOrder{
 			ID:         orderID,
 			ClientID:   clientID,
 			StoreUntil: storeUntil,
+			Cost:       cost,
+			Weight:     weight,
+			Packages:   packages,
 		}
 
 		err = orderUC.ReceiveOrderFromCourier(req)

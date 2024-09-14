@@ -141,3 +141,6 @@ fabric.properties
 
 # Storage
 /storage/*.json
+
+# Builded app
+pvz-cli-app

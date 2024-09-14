@@ -17,9 +17,16 @@ func NewOrderUseCase(repo repository.OrderRepository) *OrderUseCase {
 	return &OrderUseCase{repo: repo}
 }
 
-func (uc *OrderUseCase) ReceiveOrderFromCourier(req *dto.AddOrderRequest) error {
+func (uc *OrderUseCase) ReceiveOrderFromCourier(req dto.AddOrder) error {
+	// fmt.Println(domain.OrderPackageOptions[domain.OrderPackageStringMap[req.Packages[0]]])
+	// fmt.Println(domain.OrderPackageOptions[domain.OrderPackageStringMap[req.Packages[1]]])
 
-	order, err := domain.NewOrder(req.ID, req.ClientID, req.StoreUntil)
+	order, err := domain.NewOrder(
+		req,
+		domain.OrderPackageOptions[domain.OrderPackageStringMap[req.Packages[0]]],
+		domain.OrderPackageOptions[domain.OrderPackageStringMap[req.Packages[1]]],
+	)
+
 	if err != nil {
 		return fmt.Errorf("ReceiveOrderFromCourier: %w", err)
 	}
