@@ -18,6 +18,8 @@ func NewOrderUseCase(repo repository.OrderRepository) *OrderUseCase {
 }
 
 func (uc *OrderUseCase) ReceiveOrderFromCourier(req dto.AddOrder) error {
+	op := "OrderUseCase.ReceiveOrderFromCourier"
+
 	order, err := domain.NewOrder(
 		req,
 		domain.OrderPackageOptions[domain.OrderPackageStringMap[req.Packages[0]]],
@@ -25,12 +27,12 @@ func (uc *OrderUseCase) ReceiveOrderFromCourier(req dto.AddOrder) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("ReceiveOrderFromCourier: %w", err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	err = uc.repo.AddOrder(order)
 	if err != nil {
-		return fmt.Errorf("ReceiveOrderFromCourier: %w", err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	uc.repo.Update()
@@ -38,9 +40,11 @@ func (uc *OrderUseCase) ReceiveOrderFromCourier(req dto.AddOrder) error {
 }
 
 func (uc *OrderUseCase) ReturnOrderToCourier(orderID int) error {
+	op := "OrderUseCase.ReturnOrderToCourier"
+
 	order, err := uc.repo.GetOrderByID(orderID)
 	if err != nil {
-		return fmt.Errorf("GiveOrderToCourier: %w", err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	orderStatus := order.GetOrderStatus()
