@@ -19,15 +19,14 @@ func main() {
 
 	orderRepository, err := repository.NewOrderRepository(storage_path)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("error creating new order repository: %s", err)
+		os.Exit(1)
 		return
 	}
 
 	orderUserCase := usecase.NewOrderUseCase(*orderRepository)
 
-	go func() {
-		cli.Run(orderUserCase)
-	}()
+	go cli.Run(orderUserCase)
 
 	<-stop
 	fmt.Println("\nExiting...")
