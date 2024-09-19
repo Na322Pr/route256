@@ -81,11 +81,11 @@ func PackBag() PackageOption {
 		packageMaxWeight := 10
 
 		if len(o.GetOrderPackages()) != 0 {
-			return fmt.Errorf("order already packaged")
+			return ErrAlreadyPackaged
 		}
 
 		if o.GetOrderWeight() > packageMaxWeight {
-			return fmt.Errorf("order too heavy")
+			return ErrPackageTooHeavy
 		}
 
 		o.AddPackage(OrderPackageBag)
@@ -100,11 +100,11 @@ func PackBox() PackageOption {
 		packageMaxWeight := 30
 
 		if len(o.GetOrderPackages()) != 0 {
-			return fmt.Errorf("order already packaged")
+			return ErrAlreadyPackaged
 		}
 
 		if o.GetOrderWeight() > packageMaxWeight {
-			return fmt.Errorf("order too heavy")
+			return ErrPackageTooHeavy
 		}
 
 		o.AddPackage(OrderPackageBox)
@@ -155,7 +155,7 @@ func NewOrder(orderDTO dto.AddOrder, packOpts ...PackageOption) (*Order, error) 
 	}
 
 	if orderDTO.StoreUntil.Before(time.Now()) {
-		return nil, fmt.Errorf("order store time expired")
+		return nil, ErrStoreTimeExpired
 	}
 	order.SetStoreUntil(orderDTO.StoreUntil)
 
@@ -184,7 +184,7 @@ func NewOrder(orderDTO dto.AddOrder, packOpts ...PackageOption) (*Order, error) 
 // Setters
 func (o *Order) SetID(id int) error {
 	if id < 0 {
-		return fmt.Errorf("invalid id")
+		return ErrInvalidID
 	}
 
 	o.id = id
@@ -193,7 +193,7 @@ func (o *Order) SetID(id int) error {
 
 func (o *Order) SetClientID(clientID int) error {
 	if clientID < 0 {
-		return fmt.Errorf("invalid client id")
+		return ErrInvalidClientID
 	}
 
 	o.clientID = clientID
@@ -230,7 +230,7 @@ func (o *Order) SetPickUpTime() {
 
 func (o *Order) SetCost(cost int) error {
 	if cost < 0 {
-		return fmt.Errorf("invalid cost")
+		return ErrInvalidCost
 	}
 
 	o.cost = cost
@@ -239,7 +239,7 @@ func (o *Order) SetCost(cost int) error {
 
 func (o *Order) SetWeight(weight int) error {
 	if weight < 0 {
-		return fmt.Errorf("invalid weight")
+		return ErrInvalidWeight
 	}
 
 	o.weight = weight

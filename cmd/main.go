@@ -24,7 +24,7 @@ func main() {
 		return
 	}
 
-	orderUserCase := usecase.NewOrderUseCase(*orderRepository)
+	orderUserCase := usecase.NewOrderUseCase(orderRepository)
 
 	go cli.Run(orderUserCase)
 
