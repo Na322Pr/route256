@@ -27,5 +27,8 @@ gocyclo:
 	@echo "Checking gocyclo..."
 	gocyclo -over 5 .
 
+test:
+	go test ./...
+
 clean: 
 	rm -rf $(BUILD_DIR)/$(APP_NAME)

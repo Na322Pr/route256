@@ -144,3 +144,6 @@ fabric.properties
 
 # Build
 /build
+
+# idea
+/.idea
