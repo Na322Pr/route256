@@ -28,7 +28,13 @@ gocyclo:
 	gocyclo -over 5 .
 
 test:
-	go test ./...
+	$(GO) test ./...
+
+coverage: 
+	$(GO) test -coverprofile=coverage.out ./...
+
+coverage_html: coverage
+	$(GO) tool cover -html=coverage.out
 
 clean: 
 	rm -rf $(BUILD_DIR)/$(APP_NAME)

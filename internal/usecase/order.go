@@ -6,14 +6,22 @@ import (
 
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository"
 )
 
-type OrderUseCase struct {
-	repo repository.OrderRepository
+type orderRepository interface {
+	AddOrder(newOrder *domain.Order) error
+	GetOrderByID(id int) (*domain.Order, error)
+	GetOrdersByID(ids []int) ([]*domain.Order, error)
+	GetClientOrdersList(clientID int) ([]*domain.Order, error)
+	GetRefundsList(limit, offset int) ([]*domain.Order, error)
+	Update() error
 }
 
-func NewOrderUseCase(repo repository.OrderRepository) *OrderUseCase {
+type OrderUseCase struct {
+	repo orderRepository
+}
+
+func NewOrderUseCase(repo orderRepository) *OrderUseCase {
 	return &OrderUseCase{repo: repo}
 }
 
@@ -35,7 +43,10 @@ func (uc *OrderUseCase) ReceiveOrderFromCourier(req dto.AddOrder) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	uc.repo.Update()
+	if err := uc.repo.Update(); err != nil {
+		return fmt.Errorf("%s: %s", op, err)
+	}
+
 	return nil
 }
 
@@ -62,7 +73,9 @@ func (uc *OrderUseCase) ReturnOrderToCourier(orderID int) error {
 	}
 
 	order.SetStatus(domain.OrderStatusDelete)
-	uc.repo.Update()
+	if err := uc.repo.Update(); err != nil {
+		return fmt.Errorf("%s: %s", op, err)
+	}
 
 	return nil
 }
@@ -92,7 +105,9 @@ func (uc *OrderUseCase) GiveOrderToClient(orderIDs []int) error {
 		orders[i].SetPickUpTime()
 	}
 
-	uc.repo.Update()
+	if err := uc.repo.Update(); err != nil {
+		return fmt.Errorf("%s: %s", op, err)
+	}
 
 	return nil
 }
@@ -134,7 +149,10 @@ func (uc *OrderUseCase) GetRefundFromСlient(clientID, orderID int) error {
 	}
 
 	order.SetStatus(domain.OrderStatusRefunded)
-	uc.repo.Update()
+
+	if err := uc.repo.Update(); err != nil {
+		return fmt.Errorf("%s: %s", op, err)
+	}
 
 	return nil
 }
