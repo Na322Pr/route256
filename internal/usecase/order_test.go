@@ -1,14 +1,15 @@
-package usecase
+package usecase_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/gojuno/minimock/v3"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase/mock"
 )
 
@@ -17,20 +18,14 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 		req dto.AddOrder
 	}
 
-	successStoreTime := time.Now().AddDate(0, 0, 2)
-
-	ctrl := minimock.NewController(t)
-	repoMock := mock.NewRepositoryMock(ctrl)
-
-	uc := &OrderUseCase{
-		repo: repoMock,
-	}
+	successStoreTime := time.Now().Add(48 * time.Hour)
 
 	tests := []struct {
-		name    string
-		args    args
-		setup   func()
-		wantErr bool
+		name     string
+		args     args
+		setup    func(*mock.RepositoryMock)
+		wantErr  bool
+		errValue error
 	}{
 		{
 			name: "SuccessReceiveOrderFromCourier",
@@ -44,7 +39,7 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Packages:   []string{"unknown", "unknown"},
 				},
 			},
-			setup: func() {
+			setup: func(repoMock *mock.RepositoryMock) {
 				order, _ := domain.NewOrder(dto.AddOrder{
 					ID:         1,
 					ClientID:   1,
@@ -53,19 +48,54 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Weight:     5,
 					Packages:   []string{"unknown", "unknown"},
 				}, nil, nil)
-				fmt.Println(order)
+
 				repoMock.AddOrderMock.Expect(order).Return(nil)
 				repoMock.UpdateMock.Expect().Return(nil)
 			},
 			wantErr: false,
 		},
+		{
+			name: "ErrorReceiveOrderFromCourier",
+			args: args{
+				req: dto.AddOrder{
+					ID:         1,
+					ClientID:   1,
+					StoreUntil: successStoreTime,
+					Cost:       1000,
+					Weight:     5,
+					Packages:   []string{"unknown", "unknown"},
+				},
+			},
+			setup: func(repoMock *mock.RepositoryMock) {
+				order, _ := domain.NewOrder(dto.AddOrder{
+					ID:         1,
+					ClientID:   1,
+					StoreUntil: successStoreTime,
+					Cost:       1000,
+					Weight:     5,
+					Packages:   []string{"unknown", "unknown"},
+				}, nil, nil)
+				repoMock.AddOrderMock.Expect(order).Return(repository.ErrAlreadyExist)
+			},
+			wantErr:  true,
+			errValue: repository.ErrAlreadyExist,
+		},
 	}
 	for _, tt := range tests {
-		tt.setup()
-
 		t.Run(tt.name, func(t *testing.T) {
-			if err := uc.ReceiveOrderFromCourier(tt.args.req); (err != nil) != tt.wantErr {
-				t.Errorf("OrderUseCase.ReceiveOrderFromCourier() error = %v, wantErr %v", err, tt.wantErr)
+			t.Parallel()
+
+			ctrl := minimock.NewController(t)
+			repoMock := mock.NewRepositoryMock(ctrl)
+
+			tt.setup(repoMock)
+
+			uc := usecase.NewOrderUseCase(repoMock)
+
+			err := uc.ReceiveOrderFromCourier(tt.args.req)
+			if tt.wantErr {
+				assert.ErrorIs(t, err, tt.errValue)
+				return
 			}
 		})
 	}
@@ -76,23 +106,17 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 		orderID int
 	}
 
-	ctrl := minimock.NewController(t)
-	repoMock := mock.NewRepositoryMock(ctrl)
-
-	uc := &OrderUseCase{
-		repo: repoMock,
-	}
-
 	tests := []struct {
-		name    string
-		args    args
-		setup   func()
-		wantErr bool
+		name     string
+		args     args
+		setup    func(*mock.RepositoryMock)
+		wantErr  bool
+		errValue error
 	}{
 		{
-			name: "SuccessReturnOrderToCourier",
+			name: "Success_ReturnOrderToCourier",
 			args: args{orderID: 10},
-			setup: func() {
+			setup: func(repoMock *mock.RepositoryMock) {
 				var order domain.Order
 				order.SetClientID(10)
 				order.SetStoreUntil(time.Now())
@@ -103,14 +127,65 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "ErrorOrderPickedUp_ReturnOrderToCourier",
+			args: args{orderID: 10},
+			setup: func(repoMock *mock.RepositoryMock) {
+				var order domain.Order
+				order.SetClientID(10)
+				order.SetStoreUntil(time.Now())
+				order.SetStatus(domain.OrderStatusPickedUp)
+
+				repoMock.GetOrderByIDMock.Expect(10).Return(&order, nil)
+			},
+			wantErr:  true,
+			errValue: usecase.ErrOrderPickedUp,
+		},
+		{
+			name: "ErrorOrderDeleted_ReturnOrderToCourier",
+			args: args{orderID: 10},
+			setup: func(repoMock *mock.RepositoryMock) {
+				var order domain.Order
+				order.SetClientID(10)
+				order.SetStoreUntil(time.Now())
+				order.SetStatus(domain.OrderStatusDelete)
+
+				repoMock.GetOrderByIDMock.Expect(10).Return(&order, nil)
+			},
+			wantErr:  true,
+			errValue: usecase.ErrOrderDeleted,
+		},
+		{
+			name: "ErrorOrderStoreTimeNotExpired_ReturnOrderToCourier",
+			args: args{orderID: 10},
+			setup: func(repoMock *mock.RepositoryMock) {
+				var order domain.Order
+				order.SetClientID(10)
+				order.SetStoreUntil(time.Now().Add(24 * time.Hour))
+				order.SetStatus(domain.OrderStatusReceived)
+
+				repoMock.GetOrderByIDMock.Expect(10).Return(&order, nil)
+			},
+			wantErr:  true,
+			errValue: usecase.ErrOrderStoreTimeNotExpired,
+		},
 	}
 	for _, tt := range tests {
-		tt.setup()
-
 		t.Run(tt.name, func(t *testing.T) {
-			if err := uc.ReturnOrderToCourier(tt.args.orderID); (err != nil) != tt.wantErr {
-				t.Errorf("OrderUseCase.ReturnOrderToCourier() error = %v, wantErr %v", err, tt.wantErr)
+			t.Parallel()
+
+			ctrl := minimock.NewController(t)
+			repoMock := mock.NewRepositoryMock(ctrl)
+			tt.setup(repoMock)
+			uc := usecase.NewOrderUseCase(repoMock)
+
+			err := uc.ReturnOrderToCourier(tt.args.orderID)
+			if tt.wantErr {
+				assert.ErrorIs(t, err, tt.errValue)
+				return
 			}
+
+			assert.NoError(t, err)
 		})
 	}
 }
@@ -120,28 +195,22 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 		orderIDs []int
 	}
 
-	ctrl := minimock.NewController(t)
-	repoMock := mock.NewRepositoryMock(ctrl)
-
-	uc := &OrderUseCase{
-		repo: repoMock,
-	}
-
 	tests := []struct {
-		name    string
-		args    args
-		setup   func()
-		wantErr bool
+		name     string
+		args     args
+		setup    func(*mock.RepositoryMock)
+		wantErr  bool
+		errValue error
 	}{
 		{
 			name: "SuccessReturnOrderToCourier",
 			args: args{orderIDs: []int{10}},
-			setup: func() {
+			setup: func(repoMock *mock.RepositoryMock) {
 				var orders []*domain.Order
 
 				var order domain.Order
 				order.SetClientID(10)
-				order.SetStoreUntil(time.Now().AddDate(0, 0, 1))
+				order.SetStoreUntil(time.Now().Add(24 * time.Hour))
 				order.SetStatus(domain.OrderStatusReceived)
 
 				orders = append(orders, &order)
@@ -154,7 +223,11 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+
+			ctrl := minimock.NewController(t)
+			repoMock := mock.NewRepositoryMock(ctrl)
+			tt.setup(repoMock)
+			uc := usecase.NewOrderUseCase(repoMock)
 
 			if err := uc.GiveOrderToClient(tt.args.orderIDs); (err != nil) != tt.wantErr {
 				t.Errorf("OrderUseCase.GiveOrderToClient() error = %v, wantErr %v", err, tt.wantErr)
@@ -168,28 +241,22 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 		clientID int
 	}
 
-	successStoreTime := time.Now().AddDate(0, 0, 2)
-
-	ctrl := minimock.NewController(t)
-	repoMock := mock.NewRepositoryMock(ctrl)
-
-	uc := &OrderUseCase{
-		repo: repoMock,
-	}
+	successStoreTime := time.Now().Add(48 * time.Hour)
 
 	tests := []struct {
-		name    string
-		args    args
-		setup   func()
-		want    *dto.ListOrdersDTO
-		wantErr bool
+		name     string
+		args     args
+		setup    func(*mock.RepositoryMock)
+		want     *dto.ListOrdersDTO
+		wantErr  bool
+		errValue error
 	}{
 		{
 			name: "SuccessOrderList",
 			args: args{
 				clientID: 10,
 			},
-			setup: func() {
+			setup: func(repoMock *mock.RepositoryMock) {
 				var orders []*domain.Order
 
 				for i := 11; i <= 12; i++ {
@@ -233,7 +300,12 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			t.Parallel()
+
+			ctrl := minimock.NewController(t)
+			repoMock := mock.NewRepositoryMock(ctrl)
+			tt.setup(repoMock)
+			uc := usecase.NewOrderUseCase(repoMock)
 
 			got, err := uc.OrderList(tt.args.clientID)
 			if (err != nil) != tt.wantErr {
@@ -241,7 +313,7 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 				return
 			}
 
-			require.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -252,26 +324,20 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 		orderID  int
 	}
 
-	ctrl := minimock.NewController(t)
-	repoMock := mock.NewRepositoryMock(ctrl)
-
-	uc := &OrderUseCase{
-		repo: repoMock,
-	}
-
 	tests := []struct {
-		name    string
-		args    args
-		setup   func()
-		wantErr bool
+		name     string
+		args     args
+		setup    func(*mock.RepositoryMock)
+		wantErr  bool
+		errValue error
 	}{
 		{
-			name: "SuccessGetRefundFromСlient",
+			name: "Success_GetRefundFromСlient",
 			args: args{
 				clientID: 10,
 				orderID:  11,
 			},
-			setup: func() {
+			setup: func(repoMock *mock.RepositoryMock) {
 				var order domain.Order
 				order.SetID(11)
 				order.SetClientID(10)
@@ -283,14 +349,59 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "ErrorOrderClientMismatch_GetRefundFromСlient",
+			args: args{
+				clientID: 10,
+				orderID:  11,
+			},
+			setup: func(repoMock *mock.RepositoryMock) {
+				var order domain.Order
+				order.SetID(11)
+				order.SetClientID(11)
+				order.SetPickUpTime()
+				order.SetStatus(domain.OrderStatusPickedUp)
+
+				repoMock.GetOrderByIDMock.Expect(11).Return(&order, nil)
+			},
+			wantErr:  true,
+			errValue: usecase.ErrOrderClientMismatch,
+		},
+		{
+			name: "ErrorOrderIsNotRefundable_GetRefundFromСlient",
+			args: args{
+				clientID: 10,
+				orderID:  11,
+			},
+			setup: func(repoMock *mock.RepositoryMock) {
+				var order domain.Order
+				order.SetID(11)
+				order.SetClientID(10)
+				order.SetStatus(domain.OrderStatusReceived)
+
+				repoMock.GetOrderByIDMock.Expect(11).Return(&order, nil)
+			},
+			wantErr:  true,
+			errValue: usecase.ErrOrderIsNotRefundable,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			t.Parallel()
 
-			if err := uc.GetRefundFromСlient(tt.args.clientID, tt.args.orderID); (err != nil) != tt.wantErr {
-				t.Errorf("OrderUseCase.GetRefundFromСlient() error = %v, wantErr %v", err, tt.wantErr)
+			ctrl := minimock.NewController(t)
+			repoMock := mock.NewRepositoryMock(ctrl)
+			tt.setup(repoMock)
+			uc := usecase.NewOrderUseCase(repoMock)
+
+			err := uc.GetRefundFromСlient(tt.args.clientID, tt.args.orderID)
+
+			if tt.wantErr {
+				assert.ErrorIs(t, err, tt.errValue)
+				return
 			}
+
+			assert.NoError(t, err)
 		})
 	}
 }
@@ -301,21 +412,15 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 		offset int
 	}
 
-	successStoreTime := time.Now().AddDate(0, 0, 2)
-
-	ctrl := minimock.NewController(t)
-	repoMock := mock.NewRepositoryMock(ctrl)
-
-	uc := &OrderUseCase{
-		repo: repoMock,
-	}
+	successStoreTime := time.Now().Add(48 * time.Hour)
 
 	tests := []struct {
-		name    string
-		args    args
-		setup   func()
-		want    *dto.ListOrdersDTO
-		wantErr bool
+		name     string
+		args     args
+		setup    func(*mock.RepositoryMock)
+		want     *dto.ListOrdersDTO
+		wantErr  bool
+		errValue error
 	}{
 		{
 			name: "SuccessRefundList",
@@ -323,7 +428,7 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 				limit:  0,
 				offset: 0,
 			},
-			setup: func() {
+			setup: func(repoMock *mock.RepositoryMock) {
 				var refunds []*domain.Order
 
 				for i := 11; i <= 12; i++ {
@@ -366,7 +471,12 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
+			t.Parallel()
+
+			ctrl := minimock.NewController(t)
+			repoMock := mock.NewRepositoryMock(ctrl)
+			tt.setup(repoMock)
+			uc := usecase.NewOrderUseCase(repoMock)
 
 			got, err := uc.RefundList(tt.args.limit, tt.args.offset)
 			if (err != nil) != tt.wantErr {
@@ -374,7 +484,7 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 				return
 			}
 
-			require.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

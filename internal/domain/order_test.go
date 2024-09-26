@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
 )
 
@@ -15,7 +15,7 @@ func TestNewOrder(t *testing.T) {
 		domainError error
 	}
 
-	successStoreTime := time.Now().AddDate(0, 0, 2)
+	successStoreTime := time.Now().Add(48 * time.Hour)
 
 	tests := []struct {
 		name    string
@@ -148,13 +148,14 @@ func TestNewOrder(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := NewOrder(tt.args.orderDTO, tt.args.packOpts...)
-			if (err != nil) != tt.wantErr || err != tt.args.domainError {
-				t.Errorf("NewOrder() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.ErrorIs(t, err, tt.args.domainError)
 				return
 			}
-
-			require.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

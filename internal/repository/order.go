@@ -29,7 +29,7 @@ func NewOrderRepository(path string) (*OrderRepository, error) {
 func (r *OrderRepository) AddOrder(newOrder *domain.Order) error {
 	for _, order := range r.orders {
 		if newOrder.GetOrderID() == order.GetOrderID() {
-			return fmt.Errorf("order already exist")
+			return ErrAlreadyExist
 		}
 	}
 

@@ -61,15 +61,15 @@ func (uc *OrderUseCase) ReturnOrderToCourier(orderID int) error {
 	orderStatus := order.GetOrderStatus()
 
 	if orderStatus == "pickedUp" {
-		return fmt.Errorf("order picked up")
+		return ErrOrderPickedUp
 	}
 
 	if orderStatus == "deleted" {
-		return fmt.Errorf("order deleted")
+		return ErrOrderDeleted
 	}
 
 	if orderStatus == "received" && order.GetOrderStoreUntil().After(time.Now()) {
-		return fmt.Errorf("order store time is not expired yet")
+		return ErrOrderStoreTimeNotExpired
 	}
 
 	order.SetStatus(domain.OrderStatusDelete)
@@ -137,11 +137,11 @@ func (uc *OrderUseCase) GetRefundFromСlient(clientID, orderID int) error {
 	}
 
 	if order.GetOrderClientID() != clientID {
-		return fmt.Errorf("%s: %s", op, "order belong to different client")
+		return fmt.Errorf("%s: %w", op, ErrOrderClientMismatch)
 	}
 
 	if order.GetOrderStatus() != "pickedUp" {
-		return fmt.Errorf("%s: %s", op, "order is non-refundable in its current state")
+		return fmt.Errorf("%s: %w", op, ErrOrderIsNotRefundable)
 	}
 
 	if time.Now().After(order.GetOrderPickUpTime().AddDate(0, 0, 2)) {
