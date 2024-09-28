@@ -24,7 +24,7 @@ func NewStorageFacade(
 	}
 }
 
-func (s *StorageFacade) AddOrder(ctx context.Context, orderDTO *dto.OrderDTO) error {
+func (s *StorageFacade) AddOrder(ctx context.Context, orderDTO dto.OrderDTO) error {
 	return s.txManager.RunSerializable(ctx, func(ctxTx context.Context) error {
 		err := s.pgOrderRepository.AddOrder(ctx, orderDTO)
 		if err != nil {
@@ -35,7 +35,7 @@ func (s *StorageFacade) AddOrder(ctx context.Context, orderDTO *dto.OrderDTO) er
 	})
 }
 
-func (s *StorageFacade) UpdateOrder(ctx context.Context, orderDTO *dto.OrderDTO) error {
+func (s *StorageFacade) UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) error {
 	return s.txManager.RunSerializable(ctx, func(ctxTx context.Context) error {
 		err := s.pgOrderRepository.UpdateOrder(ctx, orderDTO)
 		if err != nil {

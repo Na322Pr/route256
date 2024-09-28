@@ -10,8 +10,8 @@ import (
 )
 
 type Facade interface {
-	AddOrder(ctx context.Context, orderDTO *dto.OrderDTO) error
-	UpdateOrder(ctx context.Context, orderDTO *dto.OrderDTO) error
+	AddOrder(ctx context.Context, orderDTO dto.OrderDTO) error
+	UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) error
 	GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO, error)
 	GetOrdersByID(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error)
 	GetClientOrdersList(ctx context.Context, clientID int) (*dto.ListOrdersDTO, error)

@@ -138,7 +138,7 @@ type Order struct {
 	cost       int
 	weight     int
 	packages   []OrderPackage
-	pickUpTime time.Time
+	pickUpTime *time.Time
 }
 
 func NewOrder(orderDTO dto.AddOrder, packOpts ...PackageOption) (*Order, error) {
@@ -225,7 +225,8 @@ func (o *Order) AddPackage(packageType OrderPackage) error {
 }
 
 func (o *Order) SetPickUpTime() {
-	o.pickUpTime = time.Now()
+	pickUpTime := time.Now()
+	o.pickUpTime = &pickUpTime
 }
 
 func (o *Order) SetCost(cost int) error {
@@ -282,11 +283,11 @@ func (o *Order) GetOrderPackages() []string {
 }
 
 func (o *Order) GetOrderPickUpTime() time.Time {
-	return o.pickUpTime
+	return *o.pickUpTime
 }
 
 // DTO Conversion
-func (o *Order) ToDTO() *dto.OrderDTO {
+func (o *Order) ToDTO() dto.OrderDTO {
 	orderDTO := dto.OrderDTO{
 		ID:         o.id,
 		ClientID:   o.clientID,
@@ -294,14 +295,14 @@ func (o *Order) ToDTO() *dto.OrderDTO {
 		Status:     OrderStatusMap[o.status],
 		Cost:       o.cost,
 		Weight:     o.weight,
-		PickUpTime: &o.pickUpTime,
+		PickUpTime: o.pickUpTime,
 	}
 
 	for _, packageType := range o.packages {
 		orderDTO.Packages = append(orderDTO.Packages, OrderPackageMap[packageType])
 	}
 
-	return &orderDTO
+	return orderDTO
 }
 
 func (o *Order) FromDTO(orderDTO dto.OrderDTO) error {
@@ -324,7 +325,7 @@ func (o *Order) FromDTO(orderDTO dto.OrderDTO) error {
 	o.storeUntil = orderDTO.StoreUntil
 
 	if orderDTO.PickUpTime != nil {
-		o.pickUpTime = *orderDTO.PickUpTime
+		o.pickUpTime = orderDTO.PickUpTime
 	}
 
 	orderStatus, ok := OrderStatusStringMap[orderDTO.Status]

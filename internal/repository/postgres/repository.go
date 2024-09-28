@@ -17,7 +17,7 @@ func NewPgOrderRepository(txManager TransactionManager) *PgOrderRepository {
 	return &PgOrderRepository{txManager: txManager}
 }
 
-func (r *PgOrderRepository) AddOrder(ctx context.Context, orderDTO *dto.OrderDTO) error {
+func (r *PgOrderRepository) AddOrder(ctx context.Context, orderDTO dto.OrderDTO) error {
 	tx := r.txManager.GetQueryEngine(ctx)
 
 	_, err := tx.Exec(ctx, `
@@ -39,7 +39,7 @@ func (r *PgOrderRepository) AddOrder(ctx context.Context, orderDTO *dto.OrderDTO
 	return nil
 }
 
-func (r *PgOrderRepository) UpdateOrder(ctx context.Context, orderDTO *dto.OrderDTO) error {
+func (r *PgOrderRepository) UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) error {
 	tx := r.txManager.GetQueryEngine(ctx)
 
 	_, err := tx.Exec(ctx, `

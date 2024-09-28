@@ -19,9 +19,9 @@ type FacadeMock struct {
 	t          minimock.Tester
 	finishOnce sync.Once
 
-	funcAddOrder          func(ctx context.Context, orderDTO *dto.OrderDTO) (err error)
+	funcAddOrder          func(ctx context.Context, orderDTO dto.OrderDTO) (err error)
 	funcAddOrderOrigin    string
-	inspectFuncAddOrder   func(ctx context.Context, orderDTO *dto.OrderDTO)
+	inspectFuncAddOrder   func(ctx context.Context, orderDTO dto.OrderDTO)
 	afterAddOrderCounter  uint64
 	beforeAddOrderCounter uint64
 	AddOrderMock          mFacadeMockAddOrder
@@ -54,9 +54,9 @@ type FacadeMock struct {
 	beforeGetRefundsListCounter uint64
 	GetRefundsListMock          mFacadeMockGetRefundsList
 
-	funcUpdateOrder          func(ctx context.Context, orderDTO *dto.OrderDTO) (err error)
+	funcUpdateOrder          func(ctx context.Context, orderDTO dto.OrderDTO) (err error)
 	funcUpdateOrderOrigin    string
-	inspectFuncUpdateOrder   func(ctx context.Context, orderDTO *dto.OrderDTO)
+	inspectFuncUpdateOrder   func(ctx context.Context, orderDTO dto.OrderDTO)
 	afterUpdateOrderCounter  uint64
 	beforeUpdateOrderCounter uint64
 	UpdateOrderMock          mFacadeMockUpdateOrder
@@ -120,13 +120,13 @@ type FacadeMockAddOrderExpectation struct {
 // FacadeMockAddOrderParams contains parameters of the Facade.AddOrder
 type FacadeMockAddOrderParams struct {
 	ctx      context.Context
-	orderDTO *dto.OrderDTO
+	orderDTO dto.OrderDTO
 }
 
 // FacadeMockAddOrderParamPtrs contains pointers to parameters of the Facade.AddOrder
 type FacadeMockAddOrderParamPtrs struct {
 	ctx      *context.Context
-	orderDTO **dto.OrderDTO
+	orderDTO *dto.OrderDTO
 }
 
 // FacadeMockAddOrderResults contains results of the Facade.AddOrder
@@ -152,7 +152,7 @@ func (mmAddOrder *mFacadeMockAddOrder) Optional() *mFacadeMockAddOrder {
 }
 
 // Expect sets up expected params for Facade.AddOrder
-func (mmAddOrder *mFacadeMockAddOrder) Expect(ctx context.Context, orderDTO *dto.OrderDTO) *mFacadeMockAddOrder {
+func (mmAddOrder *mFacadeMockAddOrder) Expect(ctx context.Context, orderDTO dto.OrderDTO) *mFacadeMockAddOrder {
 	if mmAddOrder.mock.funcAddOrder != nil {
 		mmAddOrder.mock.t.Fatalf("FacadeMock.AddOrder mock is already set by Set")
 	}
@@ -200,7 +200,7 @@ func (mmAddOrder *mFacadeMockAddOrder) ExpectCtxParam1(ctx context.Context) *mFa
 }
 
 // ExpectOrderDTOParam2 sets up expected param orderDTO for Facade.AddOrder
-func (mmAddOrder *mFacadeMockAddOrder) ExpectOrderDTOParam2(orderDTO *dto.OrderDTO) *mFacadeMockAddOrder {
+func (mmAddOrder *mFacadeMockAddOrder) ExpectOrderDTOParam2(orderDTO dto.OrderDTO) *mFacadeMockAddOrder {
 	if mmAddOrder.mock.funcAddOrder != nil {
 		mmAddOrder.mock.t.Fatalf("FacadeMock.AddOrder mock is already set by Set")
 	}
@@ -223,7 +223,7 @@ func (mmAddOrder *mFacadeMockAddOrder) ExpectOrderDTOParam2(orderDTO *dto.OrderD
 }
 
 // Inspect accepts an inspector function that has same arguments as the Facade.AddOrder
-func (mmAddOrder *mFacadeMockAddOrder) Inspect(f func(ctx context.Context, orderDTO *dto.OrderDTO)) *mFacadeMockAddOrder {
+func (mmAddOrder *mFacadeMockAddOrder) Inspect(f func(ctx context.Context, orderDTO dto.OrderDTO)) *mFacadeMockAddOrder {
 	if mmAddOrder.mock.inspectFuncAddOrder != nil {
 		mmAddOrder.mock.t.Fatalf("Inspect function is already set for FacadeMock.AddOrder")
 	}
@@ -248,7 +248,7 @@ func (mmAddOrder *mFacadeMockAddOrder) Return(err error) *FacadeMock {
 }
 
 // Set uses given function f to mock the Facade.AddOrder method
-func (mmAddOrder *mFacadeMockAddOrder) Set(f func(ctx context.Context, orderDTO *dto.OrderDTO) (err error)) *FacadeMock {
+func (mmAddOrder *mFacadeMockAddOrder) Set(f func(ctx context.Context, orderDTO dto.OrderDTO) (err error)) *FacadeMock {
 	if mmAddOrder.defaultExpectation != nil {
 		mmAddOrder.mock.t.Fatalf("Default expectation is already set for the Facade.AddOrder method")
 	}
@@ -264,7 +264,7 @@ func (mmAddOrder *mFacadeMockAddOrder) Set(f func(ctx context.Context, orderDTO 
 
 // When sets expectation for the Facade.AddOrder which will trigger the result defined by the following
 // Then helper
-func (mmAddOrder *mFacadeMockAddOrder) When(ctx context.Context, orderDTO *dto.OrderDTO) *FacadeMockAddOrderExpectation {
+func (mmAddOrder *mFacadeMockAddOrder) When(ctx context.Context, orderDTO dto.OrderDTO) *FacadeMockAddOrderExpectation {
 	if mmAddOrder.mock.funcAddOrder != nil {
 		mmAddOrder.mock.t.Fatalf("FacadeMock.AddOrder mock is already set by Set")
 	}
@@ -306,7 +306,7 @@ func (mmAddOrder *mFacadeMockAddOrder) invocationsDone() bool {
 }
 
 // AddOrder implements mm_usecase.Facade
-func (mmAddOrder *FacadeMock) AddOrder(ctx context.Context, orderDTO *dto.OrderDTO) (err error) {
+func (mmAddOrder *FacadeMock) AddOrder(ctx context.Context, orderDTO dto.OrderDTO) (err error) {
 	mm_atomic.AddUint64(&mmAddOrder.beforeAddOrderCounter, 1)
 	defer mm_atomic.AddUint64(&mmAddOrder.afterAddOrderCounter, 1)
 
@@ -1865,13 +1865,13 @@ type FacadeMockUpdateOrderExpectation struct {
 // FacadeMockUpdateOrderParams contains parameters of the Facade.UpdateOrder
 type FacadeMockUpdateOrderParams struct {
 	ctx      context.Context
-	orderDTO *dto.OrderDTO
+	orderDTO dto.OrderDTO
 }
 
 // FacadeMockUpdateOrderParamPtrs contains pointers to parameters of the Facade.UpdateOrder
 type FacadeMockUpdateOrderParamPtrs struct {
 	ctx      *context.Context
-	orderDTO **dto.OrderDTO
+	orderDTO *dto.OrderDTO
 }
 
 // FacadeMockUpdateOrderResults contains results of the Facade.UpdateOrder
@@ -1897,7 +1897,7 @@ func (mmUpdateOrder *mFacadeMockUpdateOrder) Optional() *mFacadeMockUpdateOrder 
 }
 
 // Expect sets up expected params for Facade.UpdateOrder
-func (mmUpdateOrder *mFacadeMockUpdateOrder) Expect(ctx context.Context, orderDTO *dto.OrderDTO) *mFacadeMockUpdateOrder {
+func (mmUpdateOrder *mFacadeMockUpdateOrder) Expect(ctx context.Context, orderDTO dto.OrderDTO) *mFacadeMockUpdateOrder {
 	if mmUpdateOrder.mock.funcUpdateOrder != nil {
 		mmUpdateOrder.mock.t.Fatalf("FacadeMock.UpdateOrder mock is already set by Set")
 	}
@@ -1945,7 +1945,7 @@ func (mmUpdateOrder *mFacadeMockUpdateOrder) ExpectCtxParam1(ctx context.Context
 }
 
 // ExpectOrderDTOParam2 sets up expected param orderDTO for Facade.UpdateOrder
-func (mmUpdateOrder *mFacadeMockUpdateOrder) ExpectOrderDTOParam2(orderDTO *dto.OrderDTO) *mFacadeMockUpdateOrder {
+func (mmUpdateOrder *mFacadeMockUpdateOrder) ExpectOrderDTOParam2(orderDTO dto.OrderDTO) *mFacadeMockUpdateOrder {
 	if mmUpdateOrder.mock.funcUpdateOrder != nil {
 		mmUpdateOrder.mock.t.Fatalf("FacadeMock.UpdateOrder mock is already set by Set")
 	}
@@ -1968,7 +1968,7 @@ func (mmUpdateOrder *mFacadeMockUpdateOrder) ExpectOrderDTOParam2(orderDTO *dto.
 }
 
 // Inspect accepts an inspector function that has same arguments as the Facade.UpdateOrder
-func (mmUpdateOrder *mFacadeMockUpdateOrder) Inspect(f func(ctx context.Context, orderDTO *dto.OrderDTO)) *mFacadeMockUpdateOrder {
+func (mmUpdateOrder *mFacadeMockUpdateOrder) Inspect(f func(ctx context.Context, orderDTO dto.OrderDTO)) *mFacadeMockUpdateOrder {
 	if mmUpdateOrder.mock.inspectFuncUpdateOrder != nil {
 		mmUpdateOrder.mock.t.Fatalf("Inspect function is already set for FacadeMock.UpdateOrder")
 	}
@@ -1993,7 +1993,7 @@ func (mmUpdateOrder *mFacadeMockUpdateOrder) Return(err error) *FacadeMock {
 }
 
 // Set uses given function f to mock the Facade.UpdateOrder method
-func (mmUpdateOrder *mFacadeMockUpdateOrder) Set(f func(ctx context.Context, orderDTO *dto.OrderDTO) (err error)) *FacadeMock {
+func (mmUpdateOrder *mFacadeMockUpdateOrder) Set(f func(ctx context.Context, orderDTO dto.OrderDTO) (err error)) *FacadeMock {
 	if mmUpdateOrder.defaultExpectation != nil {
 		mmUpdateOrder.mock.t.Fatalf("Default expectation is already set for the Facade.UpdateOrder method")
 	}
@@ -2009,7 +2009,7 @@ func (mmUpdateOrder *mFacadeMockUpdateOrder) Set(f func(ctx context.Context, ord
 
 // When sets expectation for the Facade.UpdateOrder which will trigger the result defined by the following
 // Then helper
-func (mmUpdateOrder *mFacadeMockUpdateOrder) When(ctx context.Context, orderDTO *dto.OrderDTO) *FacadeMockUpdateOrderExpectation {
+func (mmUpdateOrder *mFacadeMockUpdateOrder) When(ctx context.Context, orderDTO dto.OrderDTO) *FacadeMockUpdateOrderExpectation {
 	if mmUpdateOrder.mock.funcUpdateOrder != nil {
 		mmUpdateOrder.mock.t.Fatalf("FacadeMock.UpdateOrder mock is already set by Set")
 	}
@@ -2051,7 +2051,7 @@ func (mmUpdateOrder *mFacadeMockUpdateOrder) invocationsDone() bool {
 }
 
 // UpdateOrder implements mm_usecase.Facade
-func (mmUpdateOrder *FacadeMock) UpdateOrder(ctx context.Context, orderDTO *dto.OrderDTO) (err error) {
+func (mmUpdateOrder *FacadeMock) UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) (err error) {
 	mm_atomic.AddUint64(&mmUpdateOrder.beforeUpdateOrderCounter, 1)
 	defer mm_atomic.AddUint64(&mmUpdateOrder.afterUpdateOrderCounter, 1)
 
