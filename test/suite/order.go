@@ -1,165 +1,191 @@
 package order_suite
 
 import (
-	"os"
+	"bytes"
+	"context"
+	"log"
+	"os/exec"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/suite"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 )
 
 type OrderSuite struct {
 	suite.Suite
-	repo *repository.OrderRepository
+	repo usecase.Facade
 }
 
-const test_storage_path = "../../storage/test_data.json"
+const psqlDSN = "postgres://postgres:postgres@localhost:5433/postgres_test?sslmode=disable"
 
 func (s *OrderSuite) SetupTest() {
 	var err error
-	s.repo, err = repository.NewOrderRepository(test_storage_path)
+
+	e := exec.Command("make", "goose-test-up")
+	var out bytes.Buffer
+	e.Stdout = &out
+	err = e.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, psqlDSN)
 	s.Require().NoError(err)
+
+	s.repo = repository.NewFacade(pool)
 }
 
 func (s *OrderSuite) TearDownTest() {
-	os.Remove(test_storage_path)
+	var err error
+
+	e := exec.Command("make", "goose-test-down")
+	var out bytes.Buffer
+	e.Stdout = &out
+	err = e.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (s *OrderSuite) TestAddOrderSuccess() {
-	order, _ := domain.NewOrder(dto.AddOrder{
+	order := &dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
 		Cost:       1000,
 		Weight:     5,
 		Packages:   []string{"unknown", "unknown"},
-	})
+	}
 
-	err := s.repo.AddOrder(order)
+	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 }
 
 func (s *OrderSuite) TestAddOrderFailed() {
-	order, _ := domain.NewOrder(dto.AddOrder{
+	order := &dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
 		Cost:       1000,
 		Weight:     5,
 		Packages:   []string{"unknown", "unknown"},
-	})
+	}
 
-	err := s.repo.AddOrder(order)
+	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	order, _ = domain.NewOrder(dto.AddOrder{
+	order = &dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
 		Cost:       1000,
 		Weight:     5,
 		Packages:   []string{"unknown", "unknown"},
-	})
+	}
 
-	err = s.repo.AddOrder(order)
+	err = s.repo.AddOrder(context.Background(), order)
 	s.Require().Error(err)
 }
 
 func (s *OrderSuite) TestGetOrderByIDSuccess() {
-	order, _ := domain.NewOrder(dto.AddOrder{
+	order := &dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
 		Cost:       1000,
 		Weight:     5,
 		Packages:   []string{"unknown", "unknown"},
-	})
-
-	err := s.repo.AddOrder(order)
+	}
+	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetOrderByID(10)
+	_, err = s.repo.GetOrderByID(context.Background(), 10)
 	s.Require().NoError(err)
 }
 
 func (s *OrderSuite) TestGetOrderByIDFailed() {
-	_, err := s.repo.GetOrderByID(10)
+	_, err := s.repo.GetOrderByID(context.Background(), 10)
 	s.Require().Error(err)
 }
 
 func (s *OrderSuite) TestGetOrdersByIDSuccess() {
-	order, _ := domain.NewOrder(dto.AddOrder{
+	order := &dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
 		Cost:       1000,
 		Weight:     5,
 		Packages:   []string{"unknown", "unknown"},
-	})
+	}
 
-	err := s.repo.AddOrder(order)
+	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	order, _ = domain.NewOrder(dto.AddOrder{
+	order = &dto.OrderDTO{
 		ID:         11,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
 		Cost:       100,
 		Weight:     7,
 		Packages:   []string{"unknown", "unknown"},
-	})
+	}
 
-	err = s.repo.AddOrder(order)
+	err = s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetOrdersByID([]int{10, 11})
+	_, err = s.repo.GetOrdersByID(context.Background(), []int{10, 11})
 	s.Require().NoError(err)
 }
 
 func (s *OrderSuite) TestGetClientOrdersListSuccess() {
-	order, _ := domain.NewOrder(dto.AddOrder{
+	order := &dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
 		Cost:       1000,
 		Weight:     5,
 		Packages:   []string{"unknown", "unknown"},
-	})
+	}
 
-	err := s.repo.AddOrder(order)
+	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	order, _ = domain.NewOrder(dto.AddOrder{
+	order = &dto.OrderDTO{
 		ID:         11,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
 		Cost:       100,
 		Weight:     7,
 		Packages:   []string{"unknown", "unknown"},
-	})
+	}
 
-	err = s.repo.AddOrder(order)
+	err = s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetClientOrdersList(10)
+	_, err = s.repo.GetClientOrdersList(context.Background(), 10)
 	s.Require().NoError(err)
 }
 
 func (s *OrderSuite) TestGetRefundsListSuccess() {
-	order := &domain.Order{}
-	order.SetID(10)
-	order.SetClientID(10)
-	order.SetStoreUntil(time.Now().AddDate(0, 0, 1))
-	order.SetCost(1000)
-	order.SetWeight(7)
-	order.SetPickUpTime()
-	order.SetStatus(domain.OrderStatusRefunded)
+	pickUpTime := time.Now()
+	order := &dto.OrderDTO{
+		ID:         10,
+		ClientID:   10,
+		StoreUntil: time.Now().Add(24 * time.Hour),
+		Cost:       1000,
+		Weight:     7,
+		PickUpTime: &pickUpTime,
+		Status:     domain.OrderStatusMap[domain.OrderStatusRefunded],
+	}
 
-	err := s.repo.AddOrder(order)
+	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetRefundsList(0, 0)
+	_, err = s.repo.GetRefundsList(context.Background(), 0, 0)
 	s.Require().NoError(err)
 }

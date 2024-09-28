@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -23,7 +24,7 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		setup    func(*mock.RepositoryMock)
+		setup    func(*mock.FacadeMock)
 		wantErr  bool
 		errValue error
 	}{
@@ -39,18 +40,18 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Packages:   []string{"unknown", "unknown"},
 				},
 			},
-			setup: func(repoMock *mock.RepositoryMock) {
-				order, _ := domain.NewOrder(dto.AddOrder{
+			setup: func(facadeMock *mock.FacadeMock) {
+				order := dto.OrderDTO{
 					ID:         1,
 					ClientID:   1,
 					StoreUntil: successStoreTime,
 					Cost:       1000,
 					Weight:     5,
 					Packages:   []string{"unknown", "unknown"},
-				}, nil, nil)
+				}
 
-				repoMock.AddOrderMock.Expect(order).Return(nil)
-				repoMock.UpdateMock.Expect().Return(nil)
+				facadeMock.AddOrderMock.Expect(context.Background(), &order).Return(nil)
+				facadeMock.AddOrderMock.Expect(context.Background(), &order).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -66,16 +67,16 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Packages:   []string{"unknown", "unknown"},
 				},
 			},
-			setup: func(repoMock *mock.RepositoryMock) {
-				order, _ := domain.NewOrder(dto.AddOrder{
+			setup: func(facadeMock *mock.FacadeMock) {
+				order := &dto.OrderDTO{
 					ID:         1,
 					ClientID:   1,
 					StoreUntil: successStoreTime,
 					Cost:       1000,
 					Weight:     5,
 					Packages:   []string{"unknown", "unknown"},
-				}, nil, nil)
-				repoMock.AddOrderMock.Expect(order).Return(repository.ErrAlreadyExist)
+				}
+				facadeMock.AddOrderMock.Expect(context.Background(), order).Return(repository.ErrAlreadyExist)
 			},
 			wantErr:  true,
 			errValue: repository.ErrAlreadyExist,
@@ -86,13 +87,13 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 			t.Parallel()
 
 			ctrl := minimock.NewController(t)
-			repoMock := mock.NewRepositoryMock(ctrl)
+			facadeMock := mock.NewFacadeMock(ctrl)
 
-			tt.setup(repoMock)
+			tt.setup(facadeMock)
 
-			uc := usecase.NewOrderUseCase(repoMock)
+			uc := usecase.NewOrderUseCase(facadeMock)
 
-			err := uc.ReceiveOrderFromCourier(tt.args.req)
+			err := uc.ReceiveOrderFromCourier(context.Background(), tt.args.req)
 			if tt.wantErr {
 				assert.ErrorIs(t, err, tt.errValue)
 				return
@@ -109,34 +110,36 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		setup    func(*mock.RepositoryMock)
+		setup    func(*mock.FacadeMock)
 		wantErr  bool
 		errValue error
 	}{
 		{
 			name: "Success_ReturnOrderToCourier",
 			args: args{orderID: 10},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var order domain.Order
-				order.SetClientID(10)
-				order.SetStoreUntil(time.Now())
-				order.SetStatus(domain.OrderStatusReceived)
+			setup: func(facadeMock *mock.FacadeMock) {
+				// var order domain.Order
+				order := dto.OrderDTO{
+					ClientID:   10,
+					StoreUntil: time.Now(),
+					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
+				}
 
-				repoMock.GetOrderByIDMock.Expect(10).Return(&order, nil)
-				repoMock.UpdateMock.Expect().Return(nil)
+				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&order, nil)
 			},
 			wantErr: false,
 		},
 		{
 			name: "ErrorOrderPickedUp_ReturnOrderToCourier",
 			args: args{orderID: 10},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var order domain.Order
-				order.SetClientID(10)
-				order.SetStoreUntil(time.Now())
-				order.SetStatus(domain.OrderStatusPickedUp)
+			setup: func(facadeMock *mock.FacadeMock) {
+				order := dto.OrderDTO{
+					ClientID:   10,
+					StoreUntil: time.Now(),
+					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
+				}
 
-				repoMock.GetOrderByIDMock.Expect(10).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderPickedUp,
@@ -144,13 +147,14 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 		{
 			name: "ErrorOrderDeleted_ReturnOrderToCourier",
 			args: args{orderID: 10},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var order domain.Order
-				order.SetClientID(10)
-				order.SetStoreUntil(time.Now())
-				order.SetStatus(domain.OrderStatusDelete)
+			setup: func(facadeMock *mock.FacadeMock) {
+				order := dto.OrderDTO{
+					ClientID:   10,
+					StoreUntil: time.Now(),
+					Status:     domain.OrderStatusMap[domain.OrderStatusDelete],
+				}
 
-				repoMock.GetOrderByIDMock.Expect(10).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderDeleted,
@@ -158,13 +162,15 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 		{
 			name: "ErrorOrderStoreTimeNotExpired_ReturnOrderToCourier",
 			args: args{orderID: 10},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var order domain.Order
-				order.SetClientID(10)
-				order.SetStoreUntil(time.Now().Add(24 * time.Hour))
-				order.SetStatus(domain.OrderStatusReceived)
+			setup: func(facadeMock *mock.FacadeMock) {
 
-				repoMock.GetOrderByIDMock.Expect(10).Return(&order, nil)
+				order := dto.OrderDTO{
+					ClientID:   10,
+					StoreUntil: time.Now().Add(24 * time.Hour),
+					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
+				}
+
+				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderStoreTimeNotExpired,
@@ -175,11 +181,11 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 			t.Parallel()
 
 			ctrl := minimock.NewController(t)
-			repoMock := mock.NewRepositoryMock(ctrl)
-			tt.setup(repoMock)
-			uc := usecase.NewOrderUseCase(repoMock)
+			facadeMock := mock.NewFacadeMock(ctrl)
+			tt.setup(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock)
 
-			err := uc.ReturnOrderToCourier(tt.args.orderID)
+			err := uc.ReturnOrderToCourier(context.Background(), tt.args.orderID)
 			if tt.wantErr {
 				assert.ErrorIs(t, err, tt.errValue)
 				return
@@ -198,25 +204,28 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		setup    func(*mock.RepositoryMock)
+		setup    func(*mock.FacadeMock)
 		wantErr  bool
 		errValue error
 	}{
 		{
 			name: "SuccessReturnOrderToCourier",
 			args: args{orderIDs: []int{10}},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var orders []*domain.Order
+			setup: func(facadeMock *mock.FacadeMock) {
 
-				var order domain.Order
-				order.SetClientID(10)
-				order.SetStoreUntil(time.Now().Add(24 * time.Hour))
-				order.SetStatus(domain.OrderStatusReceived)
+				orders := &dto.ListOrdersDTO{
+					Orders: []dto.OrderDTO{},
+				}
 
-				orders = append(orders, &order)
+				order := dto.OrderDTO{
+					ClientID:   10,
+					StoreUntil: time.Now().Add(24 * time.Hour),
+					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
+				}
 
-				repoMock.GetOrdersByIDMock.Expect([]int{10}).Return(orders, nil)
-				repoMock.UpdateMock.Expect().Return(nil)
+				orders.Orders = append(orders.Orders, order)
+
+				facadeMock.GetOrdersByIDMock.Expect(context.Background(), []int{10}).Return(orders, nil)
 			},
 			wantErr: false,
 		},
@@ -225,11 +234,11 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ctrl := minimock.NewController(t)
-			repoMock := mock.NewRepositoryMock(ctrl)
-			tt.setup(repoMock)
-			uc := usecase.NewOrderUseCase(repoMock)
+			facadeMock := mock.NewFacadeMock(ctrl)
+			tt.setup(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock)
 
-			if err := uc.GiveOrderToClient(tt.args.orderIDs); (err != nil) != tt.wantErr {
+			if err := uc.GiveOrderToClient(context.Background(), tt.args.orderIDs); (err != nil) != tt.wantErr {
 				t.Errorf("OrderUseCase.GiveOrderToClient() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -246,7 +255,7 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		setup    func(*mock.RepositoryMock)
+		setup    func(*mock.FacadeMock)
 		want     *dto.ListOrdersDTO
 		wantErr  bool
 		errValue error
@@ -256,26 +265,29 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 			args: args{
 				clientID: 10,
 			},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var orders []*domain.Order
+			setup: func(facadeMock *mock.FacadeMock) {
+
+				orders := &dto.ListOrdersDTO{
+					Orders: []dto.OrderDTO{},
+				}
 
 				for i := 11; i <= 12; i++ {
-					order, _ := domain.NewOrder(dto.AddOrder{
+					order := dto.OrderDTO{
 						ID:         i,
 						ClientID:   10,
 						StoreUntil: successStoreTime,
 						Cost:       100 * i,
 						Weight:     i,
 						Packages:   []string{},
-					})
+					}
 
-					orders = append(orders, order)
+					orders.Orders = append(orders.Orders, order)
 				}
 
-				repoMock.GetClientOrdersListMock.Expect(10).Return(orders, nil)
+				facadeMock.GetClientOrdersListMock.Expect(context.Background(), 10).Return(orders, nil)
 			},
 			want: &dto.ListOrdersDTO{
-				Orders: []dto.OrderDto{
+				Orders: []dto.OrderDTO{
 					{
 						ID:         11,
 						ClientID:   10,
@@ -303,11 +315,11 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 			t.Parallel()
 
 			ctrl := minimock.NewController(t)
-			repoMock := mock.NewRepositoryMock(ctrl)
-			tt.setup(repoMock)
-			uc := usecase.NewOrderUseCase(repoMock)
+			facadeMock := mock.NewFacadeMock(ctrl)
+			tt.setup(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock)
 
-			got, err := uc.OrderList(tt.args.clientID)
+			got, err := uc.OrderList(context.Background(), tt.args.clientID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OrderUseCase.OrderList() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -327,7 +339,7 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		setup    func(*mock.RepositoryMock)
+		setup    func(*mock.FacadeMock)
 		wantErr  bool
 		errValue error
 	}{
@@ -337,15 +349,17 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				clientID: 10,
 				orderID:  11,
 			},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var order domain.Order
-				order.SetID(11)
-				order.SetClientID(10)
-				order.SetPickUpTime()
-				order.SetStatus(domain.OrderStatusPickedUp)
+			setup: func(facadeMock *mock.FacadeMock) {
 
-				repoMock.GetOrderByIDMock.Expect(11).Return(&order, nil)
-				repoMock.UpdateMock.Expect().Return(nil)
+				pickUpTime := time.Now()
+				order := dto.OrderDTO{
+					ID:         11,
+					ClientID:   10,
+					PickUpTime: &pickUpTime,
+					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
+				}
+
+				facadeMock.GetOrderByIDMock.Expect(context.Background(), 11).Return(&order, nil)
 			},
 			wantErr: false,
 		},
@@ -355,14 +369,17 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				clientID: 10,
 				orderID:  11,
 			},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var order domain.Order
-				order.SetID(11)
-				order.SetClientID(11)
-				order.SetPickUpTime()
-				order.SetStatus(domain.OrderStatusPickedUp)
+			setup: func(facadeMock *mock.FacadeMock) {
 
-				repoMock.GetOrderByIDMock.Expect(11).Return(&order, nil)
+				pickUpTime := time.Now()
+				order := dto.OrderDTO{
+					ID:         11,
+					ClientID:   10,
+					PickUpTime: &pickUpTime,
+					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
+				}
+
+				facadeMock.GetOrderByIDMock.Expect(context.Background(), 11).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderClientMismatch,
@@ -373,13 +390,14 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				clientID: 10,
 				orderID:  11,
 			},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var order domain.Order
-				order.SetID(11)
-				order.SetClientID(10)
-				order.SetStatus(domain.OrderStatusReceived)
+			setup: func(facadeMock *mock.FacadeMock) {
+				order := dto.OrderDTO{
+					ID:       11,
+					ClientID: 10,
+					Status:   domain.OrderStatusMap[domain.OrderStatusReceived],
+				}
 
-				repoMock.GetOrderByIDMock.Expect(11).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(context.Background(), 11).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderIsNotRefundable,
@@ -390,11 +408,11 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 			t.Parallel()
 
 			ctrl := minimock.NewController(t)
-			repoMock := mock.NewRepositoryMock(ctrl)
-			tt.setup(repoMock)
-			uc := usecase.NewOrderUseCase(repoMock)
+			facadeMock := mock.NewFacadeMock(ctrl)
+			tt.setup(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock)
 
-			err := uc.GetRefundFromСlient(tt.args.clientID, tt.args.orderID)
+			err := uc.GetRefundFromСlient(context.Background(), tt.args.clientID, tt.args.orderID)
 
 			if tt.wantErr {
 				assert.ErrorIs(t, err, tt.errValue)
@@ -417,7 +435,7 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		setup    func(*mock.RepositoryMock)
+		setup    func(*mock.FacadeMock)
 		want     *dto.ListOrdersDTO
 		wantErr  bool
 		errValue error
@@ -428,26 +446,27 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 				limit:  0,
 				offset: 0,
 			},
-			setup: func(repoMock *mock.RepositoryMock) {
-				var refunds []*domain.Order
+			setup: func(facadeMock *mock.FacadeMock) {
+				var refunds *dto.ListOrdersDTO
 
 				for i := 11; i <= 12; i++ {
-					var refund domain.Order
-					refund.SetID(i)
-					refund.SetClientID(10)
-					refund.SetStoreUntil(successStoreTime)
-					refund.SetStatus(domain.OrderStatusRefunded)
-					refund.SetCost(100 * i)
-					refund.SetWeight(i)
+					refund := dto.OrderDTO{
+						ID:         i,
+						ClientID:   10,
+						StoreUntil: successStoreTime,
+						Status:     domain.OrderStatusMap[domain.OrderStatusRefunded],
+						Cost:       100 * i,
+						Weight:     i,
+					}
 
-					refunds = append(refunds, &refund)
+					refunds.Orders = append(refunds.Orders, refund)
 				}
 
-				repoMock.GetRefundsListMock.Expect(0, 0).Return(refunds, nil)
+				facadeMock.GetRefundsListMock.Expect(context.Background(), 0, 0).Return(refunds, nil)
 
 			},
 			want: &dto.ListOrdersDTO{
-				Orders: []dto.OrderDto{
+				Orders: []dto.OrderDTO{
 					{
 						ID:         11,
 						ClientID:   10,
@@ -474,11 +493,11 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 			t.Parallel()
 
 			ctrl := minimock.NewController(t)
-			repoMock := mock.NewRepositoryMock(ctrl)
-			tt.setup(repoMock)
-			uc := usecase.NewOrderUseCase(repoMock)
+			facadeMock := mock.NewFacadeMock(ctrl)
+			tt.setup(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock)
 
-			got, err := uc.RefundList(tt.args.limit, tt.args.offset)
+			got, err := uc.RefundList(context.Background(), tt.args.limit, tt.args.offset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OrderUseCase.RefundList() error = %v, wantErr %v", err, tt.wantErr)
 				return

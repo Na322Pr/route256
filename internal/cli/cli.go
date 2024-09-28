@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -33,7 +34,7 @@ var receiveOrderFromCourierCmd = &cobra.Command{
 	Use:   "receive-courier",
 	Short: "Receive order from courier",
 	Long: `Usage: receive-courier orderID clientID storeUntil cost weight [package1] [package2]
-Example: receive-courier 1 1 2024-10-01 15:20:00 7 1200 bag tape`,
+Example: receive-courier 1 1 2024-10-01 15:20:00 1200 7 bag tape`,
 	Run: func(cmd *cobra.Command, args []string) {
 		minArgsCount := 6
 		maxArgsCount := 8
@@ -60,12 +61,12 @@ Example: receive-courier 1 1 2024-10-01 15:20:00 7 1200 bag tape`,
 
 		cost, err = strconv.Atoi(args[4])
 		if err != nil {
-			fmt.Println("storeUntil is incorrect")
+			fmt.Println("cost is incorrect")
 		}
 
 		weight, err := strconv.Atoi(args[5])
 		if err != nil {
-			fmt.Println("storeUntil is incorrect")
+			fmt.Println("weight is incorrect")
 		}
 
 		packages := []string{"unknown", "unknown"}
@@ -87,7 +88,7 @@ Example: receive-courier 1 1 2024-10-01 15:20:00 7 1200 bag tape`,
 			Packages:   packages,
 		}
 
-		err = orderUC.ReceiveOrderFromCourier(req)
+		err = orderUC.ReceiveOrderFromCourier(context.Background(), req)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -114,7 +115,7 @@ Example: return-courier 1`,
 			return
 		}
 
-		err = orderUC.ReturnOrderToCourier(orderID)
+		err = orderUC.ReturnOrderToCourier(context.Background(), orderID)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -147,7 +148,7 @@ Example: give-out-client 1 2 3 4`,
 			orderIDs = append(orderIDs, orderID)
 		}
 
-		err := orderUC.GiveOrderToClient(orderIDs)
+		err := orderUC.GiveOrderToClient(context.Background(), orderIDs)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -183,7 +184,7 @@ Example 2, return n last orders: order-list 10 10`,
 		// 	}
 		// }
 
-		orders, err := orderUC.OrderList(clientID)
+		orders, err := orderUC.OrderList(context.Background(), clientID)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -219,7 +220,7 @@ Example: refund-client 10 12`,
 			return
 		}
 
-		err = orderUC.GetRefundFromСlient(clientID, orderID)
+		err = orderUC.GetRefundFromСlient(context.Background(), clientID, orderID)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -260,7 +261,7 @@ Example 3, return n refunds with offset: order-list 10 10`,
 			}
 		}
 
-		refunds, err := orderUC.RefundList(limit, offset)
+		refunds, err := orderUC.RefundList(context.Background(), limit, offset)
 		if err != nil {
 			fmt.Println(err)
 			return

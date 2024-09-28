@@ -286,25 +286,25 @@ func (o *Order) GetOrderPickUpTime() time.Time {
 }
 
 // DTO Conversion
-func (o *Order) ToDTO() dto.OrderDto {
-	orderDTO := dto.OrderDto{
+func (o *Order) ToDTO() *dto.OrderDTO {
+	orderDTO := dto.OrderDTO{
 		ID:         o.id,
 		ClientID:   o.clientID,
 		StoreUntil: o.storeUntil,
 		Status:     OrderStatusMap[o.status],
 		Cost:       o.cost,
 		Weight:     o.weight,
-		PickUpTime: o.pickUpTime,
+		PickUpTime: &o.pickUpTime,
 	}
 
 	for _, packageType := range o.packages {
 		orderDTO.Packages = append(orderDTO.Packages, OrderPackageMap[packageType])
 	}
 
-	return orderDTO
+	return &orderDTO
 }
 
-func (o *Order) FromDTO(orderDTO dto.OrderDto) error {
+func (o *Order) FromDTO(orderDTO dto.OrderDTO) error {
 	if err := o.SetID(orderDTO.ID); err != nil {
 		return err
 	}
@@ -322,7 +322,10 @@ func (o *Order) FromDTO(orderDTO dto.OrderDto) error {
 	}
 
 	o.storeUntil = orderDTO.StoreUntil
-	o.pickUpTime = orderDTO.PickUpTime
+
+	if orderDTO.PickUpTime != nil {
+		o.pickUpTime = *orderDTO.PickUpTime
+	}
 
 	orderStatus, ok := OrderStatusStringMap[orderDTO.Status]
 	if ok {

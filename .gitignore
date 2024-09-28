@@ -147,3 +147,6 @@ fabric.properties
 
 # idea
 /.idea
+
+# pgdata
+/pgdata

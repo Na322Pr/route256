@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -8,24 +9,24 @@ import (
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
 )
 
-type orderRepository interface {
-	AddOrder(newOrder *domain.Order) error
-	GetOrderByID(id int) (*domain.Order, error)
-	GetOrdersByID(ids []int) ([]*domain.Order, error)
-	GetClientOrdersList(clientID int) ([]*domain.Order, error)
-	GetRefundsList(limit, offset int) ([]*domain.Order, error)
-	Update() error
+type Facade interface {
+	AddOrder(ctx context.Context, orderDTO *dto.OrderDTO) error
+	UpdateOrder(ctx context.Context, orderDTO *dto.OrderDTO) error
+	GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO, error)
+	GetOrdersByID(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error)
+	GetClientOrdersList(ctx context.Context, clientID int) (*dto.ListOrdersDTO, error)
+	GetRefundsList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) // Update() error
 }
 
 type OrderUseCase struct {
-	repo orderRepository
+	repo Facade
 }
 
-func NewOrderUseCase(repo orderRepository) *OrderUseCase {
+func NewOrderUseCase(repo Facade) *OrderUseCase {
 	return &OrderUseCase{repo: repo}
 }
 
-func (uc *OrderUseCase) ReceiveOrderFromCourier(req dto.AddOrder) error {
+func (uc *OrderUseCase) ReceiveOrderFromCourier(ctx context.Context, req dto.AddOrder) error {
 	op := "OrderUseCase.ReceiveOrderFromCourier"
 
 	order, err := domain.NewOrder(
@@ -38,25 +39,24 @@ func (uc *OrderUseCase) ReceiveOrderFromCourier(req dto.AddOrder) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	err = uc.repo.AddOrder(order)
+	err = uc.repo.AddOrder(ctx, order.ToDTO())
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	if err := uc.repo.Update(); err != nil {
-		return fmt.Errorf("%s: %s", op, err)
 	}
 
 	return nil
 }
 
-func (uc *OrderUseCase) ReturnOrderToCourier(orderID int) error {
+func (uc *OrderUseCase) ReturnOrderToCourier(ctx context.Context, orderID int) error {
 	op := "OrderUseCase.ReturnOrderToCourier"
 
-	order, err := uc.repo.GetOrderByID(orderID)
+	orderDTO, err := uc.repo.GetOrderByID(ctx, orderID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
+	var order domain.Order
+	order.FromDTO(*orderDTO)
 
 	orderStatus := order.GetOrderStatus()
 
@@ -73,23 +73,35 @@ func (uc *OrderUseCase) ReturnOrderToCourier(orderID int) error {
 	}
 
 	order.SetStatus(domain.OrderStatusDelete)
-	if err := uc.repo.Update(); err != nil {
-		return fmt.Errorf("%s: %s", op, err)
+
+	if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
 }
 
-func (uc *OrderUseCase) GiveOrderToClient(orderIDs []int) error {
+func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int) error {
 	op := "OrderUseCase.GiveOrderToClient"
 
 	if len(orderIDs) == 0 {
 		return fmt.Errorf("%s: %s", op, "no order IDs")
 	}
 
-	orders, err := uc.repo.GetOrdersByID(orderIDs)
+	listOrdersDTO, err := uc.repo.GetOrdersByID(ctx, orderIDs)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if len(listOrdersDTO.Orders) == 0 {
+		return fmt.Errorf("%s: %s", op, "no orders")
+	}
+
+	var orders []*domain.Order
+	for i := 0; i < len(listOrdersDTO.Orders); i++ {
+		var order domain.Order
+		order.FromDTO(listOrdersDTO.Orders[i])
+		orders = append(orders, &order)
 	}
 
 	clientID := orders[0].GetOrderClientID()
@@ -105,36 +117,37 @@ func (uc *OrderUseCase) GiveOrderToClient(orderIDs []int) error {
 		orders[i].SetPickUpTime()
 	}
 
-	if err := uc.repo.Update(); err != nil {
-		return fmt.Errorf("%s: %s", op, err)
+	// Multiple updates
+	for _, order := range orders {
+		if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
 	}
 
 	return nil
 }
 
-func (uc *OrderUseCase) OrderList(clientID int) (*dto.ListOrdersDTO, error) {
+func (uc *OrderUseCase) OrderList(ctx context.Context, clientID int) (*dto.ListOrdersDTO, error) {
 	op := "OrderUseCase.OrderList"
 
-	orders, err := uc.repo.GetClientOrdersList(clientID)
+	listOrdersDTO, err := uc.repo.GetClientOrdersList(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	ordersDTO := dto.ListOrdersDTO{}
-	for _, order := range orders {
-		ordersDTO.Orders = append(ordersDTO.Orders, order.ToDTO())
-	}
-
-	return &ordersDTO, nil
+	return listOrdersDTO, nil
 }
 
-func (uc *OrderUseCase) GetRefundFromСlient(clientID, orderID int) error {
+func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID, orderID int) error {
 	op := "OrderUseCase.GetRefundFromСlient"
 
-	order, err := uc.repo.GetOrderByID(orderID)
+	orderDTO, err := uc.repo.GetOrderByID(ctx, orderID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
+	var order domain.Order
+	order.FromDTO(*orderDTO)
 
 	if order.GetOrderClientID() != clientID {
 		return fmt.Errorf("%s: %w", op, ErrOrderClientMismatch)
@@ -149,26 +162,20 @@ func (uc *OrderUseCase) GetRefundFromСlient(clientID, orderID int) error {
 	}
 
 	order.SetStatus(domain.OrderStatusRefunded)
-
-	if err := uc.repo.Update(); err != nil {
-		return fmt.Errorf("%s: %s", op, err)
+	if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
 }
 
-func (uc *OrderUseCase) RefundList(limit, offset int) (*dto.ListOrdersDTO, error) {
+func (uc *OrderUseCase) RefundList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) {
 	op := "OrderUseCase.RefundList"
 
-	refunds, err := uc.repo.GetRefundsList(limit, offset)
+	refundsDTO, err := uc.repo.GetRefundsList(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	refundsDTO := dto.ListOrdersDTO{}
-	for _, order := range refunds {
-		refundsDTO.Orders = append(refundsDTO.Orders, order.ToDTO())
-	}
-
-	return &refundsDTO, nil
+	return refundsDTO, nil
 }
