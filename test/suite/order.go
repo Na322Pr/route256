@@ -23,9 +23,9 @@ type OrderSuite struct {
 
 const psqlDSN = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 
-func (s *OrderSuite) SetupTest() {
+func (s *OrderSuite) SetupSuite() {
 	var err error
-	e := exec.Command("make", "test-up")
+	e := exec.Command("make", "compose-up")
 	e.Stdout = os.Stdout
 	e.Stderr = os.Stderr
 
@@ -40,12 +40,35 @@ func (s *OrderSuite) SetupTest() {
 	s.repo = repository.NewFacade(s.pool)
 }
 
-func (s *OrderSuite) TearDownTest() {
+func (s *OrderSuite) TearDownSuite() {
 	s.pool.Close()
 
 	var err error
 
-	e := exec.Command("make", "test-down")
+	e := exec.Command("make", "compose-down")
+	e.Stdout = os.Stdout
+	e.Stderr = os.Stderr
+
+	if err = e.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (s *OrderSuite) SetupTest() {
+	var err error
+	e := exec.Command("make", "goose-up")
+	e.Stdout = os.Stdout
+	e.Stderr = os.Stderr
+
+	if err = e.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (s *OrderSuite) TearDownTest() {
+	var err error
+
+	e := exec.Command("make", "goose-down")
 	e.Stdout = os.Stdout
 	e.Stderr = os.Stderr
 
