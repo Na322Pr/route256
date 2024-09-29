@@ -120,20 +120,19 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 			setup: func(facadeMock *mock.FacadeMock) {
 				successStoreTime := time.Now()
 
-				order := dto.OrderDTO{
+				getOrder := dto.OrderDTO{
 					ClientID:   10,
 					StoreUntil: successStoreTime,
 					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
 				}
+				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&getOrder, nil)
 
-				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&order, nil)
-
-				order = dto.OrderDTO{
+				updateOrder := dto.OrderDTO{
 					ClientID:   10,
 					StoreUntil: successStoreTime,
 					Status:     domain.OrderStatusMap[domain.OrderStatusDelete],
 				}
-				facadeMock.UpdateOrderMock.Expect(context.Background(), order).Return(nil)
+				facadeMock.UpdateOrderMock.Expect(context.Background(), updateOrder).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -217,9 +216,11 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 		errValue error
 	}{
 		{
-			name: "SuccessReturnOrderToCourier",
+			name: "Success_GiveOrderToClient",
 			args: args{orderIDs: []int{10}},
 			setup: func(facadeMock *mock.FacadeMock) {
+
+				successStoreTime := time.Now().Add(24 * time.Hour)
 
 				orders := &dto.ListOrdersDTO{
 					Orders: []dto.OrderDTO{},
@@ -227,13 +228,14 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 
 				order := dto.OrderDTO{
 					ClientID:   10,
-					StoreUntil: time.Now().Add(24 * time.Hour),
+					StoreUntil: successStoreTime,
 					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
 				}
 
 				orders.Orders = append(orders.Orders, order)
-
 				facadeMock.GetOrdersByIDMock.Expect(context.Background(), []int{10}).Return(orders, nil)
+				facadeMock.UpdateOrderMock.Return(nil)
+
 			},
 			wantErr: false,
 		},
@@ -286,7 +288,7 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 						StoreUntil: successStoreTime,
 						Cost:       100 * i,
 						Weight:     i,
-						Packages:   []string{},
+						Status:     "received",
 					}
 
 					orders.Orders = append(orders.Orders, order)
@@ -368,6 +370,8 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				}
 
 				facadeMock.GetOrderByIDMock.Expect(context.Background(), 11).Return(&order, nil)
+				facadeMock.UpdateOrderMock.Return(nil)
+
 			},
 			wantErr: false,
 		},
@@ -382,7 +386,7 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				pickUpTime := time.Now()
 				order := dto.OrderDTO{
 					ID:         11,
-					ClientID:   10,
+					ClientID:   11,
 					PickUpTime: &pickUpTime,
 					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
 				}
@@ -455,7 +459,9 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 				offset: 0,
 			},
 			setup: func(facadeMock *mock.FacadeMock) {
-				var refunds *dto.ListOrdersDTO
+				refunds := &dto.ListOrdersDTO{
+					Orders: []dto.OrderDTO{},
+				}
 
 				for i := 11; i <= 12; i++ {
 					refund := dto.OrderDTO{
