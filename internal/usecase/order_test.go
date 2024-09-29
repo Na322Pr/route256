@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository/postgres"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase/mock"
 )
@@ -76,10 +76,10 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Cost:       1000,
 					Weight:     5,
 				}
-				facadeMock.AddOrderMock.Expect(context.Background(), order).Return(repository.ErrAlreadyExist)
+				facadeMock.AddOrderMock.Expect(context.Background(), order).Return(postgres.ErrAlreadyExist)
 			},
 			wantErr:  true,
-			errValue: repository.ErrAlreadyExist,
+			errValue: postgres.ErrAlreadyExist,
 		},
 	}
 	for _, tt := range tests {

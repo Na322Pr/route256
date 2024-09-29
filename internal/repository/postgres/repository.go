@@ -70,6 +70,10 @@ func (r *PgOrderRepository) GetOrderByID(ctx context.Context, id int) (*dto.Orde
 		select * from orders where order_id = $1
 	`, id)
 
+	if len(listOrdersDTO.Orders) == 0 {
+		return nil, ErrOrderNotFound
+	}
+
 	return &listOrdersDTO.Orders[0], err
 }
 

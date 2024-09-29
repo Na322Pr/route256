@@ -1,9 +1,9 @@
 package order_suite
 
 import (
-	"bytes"
 	"context"
 	"log"
+	"os"
 	"os/exec"
 	"time"
 
@@ -17,43 +17,45 @@ import (
 
 type OrderSuite struct {
 	suite.Suite
+	pool *pgxpool.Pool
 	repo usecase.Facade
 }
 
-const psqlDSN = "postgres://postgres:postgres@localhost:5433/postgres_test?sslmode=disable"
+const psqlDSN = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 
 func (s *OrderSuite) SetupTest() {
 	var err error
+	e := exec.Command("make", "test-up")
+	e.Stdout = os.Stdout
+	e.Stderr = os.Stderr
 
-	e := exec.Command("make", "goose-test-up")
-	var out bytes.Buffer
-	e.Stdout = &out
-	err = e.Run()
-	if err != nil {
+	if err = e.Run(); err != nil {
 		log.Fatal(err)
 	}
 
 	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, psqlDSN)
+	s.pool, err = pgxpool.New(ctx, psqlDSN)
 	s.Require().NoError(err)
 
-	s.repo = repository.NewFacade(pool)
+	s.repo = repository.NewFacade(s.pool)
 }
 
 func (s *OrderSuite) TearDownTest() {
+	s.pool.Close()
+
 	var err error
 
-	e := exec.Command("make", "goose-test-down")
-	var out bytes.Buffer
-	e.Stdout = &out
-	err = e.Run()
-	if err != nil {
+	e := exec.Command("make", "test-down")
+	e.Stdout = os.Stdout
+	e.Stderr = os.Stderr
+
+	if err = e.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func (s *OrderSuite) TestAddOrderSuccess() {
-	order := &dto.OrderDTO{
+	order := dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
@@ -67,7 +69,7 @@ func (s *OrderSuite) TestAddOrderSuccess() {
 }
 
 func (s *OrderSuite) TestAddOrderFailed() {
-	order := &dto.OrderDTO{
+	order := dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
@@ -79,7 +81,7 @@ func (s *OrderSuite) TestAddOrderFailed() {
 	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	order = &dto.OrderDTO{
+	order = dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
@@ -93,7 +95,7 @@ func (s *OrderSuite) TestAddOrderFailed() {
 }
 
 func (s *OrderSuite) TestGetOrderByIDSuccess() {
-	order := &dto.OrderDTO{
+	order := dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
@@ -114,7 +116,7 @@ func (s *OrderSuite) TestGetOrderByIDFailed() {
 }
 
 func (s *OrderSuite) TestGetOrdersByIDSuccess() {
-	order := &dto.OrderDTO{
+	order := dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
@@ -126,7 +128,7 @@ func (s *OrderSuite) TestGetOrdersByIDSuccess() {
 	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	order = &dto.OrderDTO{
+	order = dto.OrderDTO{
 		ID:         11,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
@@ -143,7 +145,7 @@ func (s *OrderSuite) TestGetOrdersByIDSuccess() {
 }
 
 func (s *OrderSuite) TestGetClientOrdersListSuccess() {
-	order := &dto.OrderDTO{
+	order := dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
@@ -155,7 +157,7 @@ func (s *OrderSuite) TestGetClientOrdersListSuccess() {
 	err := s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	order = &dto.OrderDTO{
+	order = dto.OrderDTO{
 		ID:         11,
 		ClientID:   10,
 		StoreUntil: time.Now().AddDate(0, 0, 2),
@@ -173,7 +175,7 @@ func (s *OrderSuite) TestGetClientOrdersListSuccess() {
 
 func (s *OrderSuite) TestGetRefundsListSuccess() {
 	pickUpTime := time.Now()
-	order := &dto.OrderDTO{
+	order := dto.OrderDTO{
 		ID:         10,
 		ClientID:   10,
 		StoreUntil: time.Now().Add(24 * time.Hour),

@@ -2,7 +2,6 @@ GO=go
 APP_NAME=pvz-cli-app
 BUILD_DIR=build
 POSTGRES_CONN=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
-POSTGRES_TEST_CONN=postgres://postgres:postgres@localhost:5432/postgres_test?sslmode=disable
 
 build: clean
 	$(GO) build -o $(BUILD_DIR)/$(APP_NAME) cmd/main.go
@@ -69,22 +68,3 @@ goose-down:
 
 goose-status:
 	goose -dir ./migrations postgres "$(POSTGRES_CONN)" status
-
-
-# Test build cmds
-
-compose-test-up:
-	docker-compose up -d postgres_test
-
-compose-test-down:
-	docker-compose down postgres_test
-
-goose-test-up:
-	goose -dir ./migrations postgres "$(POSTGRES_TEST_CONN)" up
-
-goose-test-down:
-	goose -dir ./migrations postgres "$(POSTGRES_TEST_CONN)" down
-
-test-up: compose-test-up goose-test-up
-
-test-down: compose-test-down goose-test-down
