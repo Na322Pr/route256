@@ -1,6 +1,6 @@
 -- +goose Up
 create table orders (
-    order_id bigint not null unique,
+    order_id bigint primary key,
     client_id integer not null,
     store_until timestamptz not null,
     status varchar(50) not null,
