@@ -1,5 +1,5 @@
 -- +goose Up
-create table if not exists orders (
+create table orders (
     order_id bigint not null unique,
     client_id integer not null,
     store_until timestamptz not null,

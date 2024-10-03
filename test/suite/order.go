@@ -2,6 +2,7 @@ package order_suite
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"os"
 	"os/exec"
@@ -163,7 +164,7 @@ func (s *OrderSuite) TestGetOrdersByIDSuccess() {
 	err = s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetOrdersByID(context.Background(), []int{10, 11})
+	_, err = s.repo.GetOrdersByIDs(context.Background(), []int{10, 11})
 	s.Require().NoError(err)
 }
 
@@ -204,7 +205,7 @@ func (s *OrderSuite) TestGetRefundsListSuccess() {
 		StoreUntil: time.Now().Add(24 * time.Hour),
 		Cost:       1000,
 		Weight:     7,
-		PickUpTime: &pickUpTime,
+		PickUpTime: sql.NullTime{Time: pickUpTime, Valid: true},
 		Status:     domain.OrderStatusMap[domain.OrderStatusRefunded],
 	}
 

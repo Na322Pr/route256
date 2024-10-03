@@ -62,11 +62,11 @@ func (s *StorageFacade) GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO
 	return orderDTO, err
 }
 
-func (s *StorageFacade) GetOrdersByID(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error) {
+func (s *StorageFacade) GetOrdersByIDs(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error) {
 	var listOrdersDTO *dto.ListOrdersDTO
 
 	err := s.txManager.RunReadCommitted(ctx, func(ctxTx context.Context) error {
-		c, err := s.pgOrderRepository.GetOrdersByID(ctx, ids)
+		c, err := s.pgOrderRepository.GetOrdersByIDs(ctx, ids)
 		if err != nil {
 			return err
 		}

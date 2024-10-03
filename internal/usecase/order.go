@@ -13,7 +13,7 @@ type Facade interface {
 	AddOrder(ctx context.Context, orderDTO dto.OrderDTO) error
 	UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) error
 	GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO, error)
-	GetOrdersByID(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error)
+	GetOrdersByIDs(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error)
 	GetClientOrdersList(ctx context.Context, clientID int) (*dto.ListOrdersDTO, error)
 	GetRefundsList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) // Update() error
 }
@@ -88,7 +88,7 @@ func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int) e
 		return fmt.Errorf("%s: %s", op, "no order IDs")
 	}
 
-	listOrdersDTO, err := uc.repo.GetOrdersByID(ctx, orderIDs)
+	listOrdersDTO, err := uc.repo.GetOrdersByIDs(ctx, orderIDs)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -114,7 +114,7 @@ func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int) e
 
 	for i := 0; i < len(orders); i++ {
 		orders[i].SetStatus(domain.OrderStatusPickedUp)
-		orders[i].SetPickUpTime()
+		orders[i].SetPickUpTime(time.Now())
 	}
 
 	// Multiple updates
@@ -148,6 +148,8 @@ func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID, orde
 
 	var order domain.Order
 	order.FromDTO(*orderDTO)
+
+	fmt.Println(order.GetOrderPickUpTime())
 
 	if order.GetOrderClientID() != clientID {
 		return fmt.Errorf("%s: %w", op, ErrOrderClientMismatch)

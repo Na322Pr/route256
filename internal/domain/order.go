@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -138,7 +139,7 @@ type Order struct {
 	cost       int
 	weight     int
 	packages   []OrderPackage
-	pickUpTime *time.Time
+	pickUpTime time.Time
 }
 
 func NewOrder(orderDTO dto.AddOrder, packOpts ...PackageOption) (*Order, error) {
@@ -224,9 +225,10 @@ func (o *Order) AddPackage(packageType OrderPackage) error {
 	return nil
 }
 
-func (o *Order) SetPickUpTime() {
-	pickUpTime := time.Now()
-	o.pickUpTime = &pickUpTime
+func (o *Order) SetPickUpTime(pickUpTime time.Time) {
+	fmt.Println(pickUpTime)
+	fmt.Println(time.Now())
+	o.pickUpTime = pickUpTime
 }
 
 func (o *Order) SetCost(cost int) error {
@@ -283,7 +285,7 @@ func (o *Order) GetOrderPackages() []string {
 }
 
 func (o *Order) GetOrderPickUpTime() time.Time {
-	return *o.pickUpTime
+	return o.pickUpTime
 }
 
 // DTO Conversion
@@ -295,7 +297,7 @@ func (o *Order) ToDTO() dto.OrderDTO {
 		Status:     OrderStatusMap[o.status],
 		Cost:       o.cost,
 		Weight:     o.weight,
-		PickUpTime: o.pickUpTime,
+		PickUpTime: sql.NullTime{Time: o.pickUpTime},
 	}
 
 	for _, packageType := range o.packages {
@@ -322,10 +324,13 @@ func (o *Order) FromDTO(orderDTO dto.OrderDTO) error {
 		return err
 	}
 
-	o.storeUntil = orderDTO.StoreUntil
+	o.SetStoreUntil(orderDTO.StoreUntil)
 
-	if orderDTO.PickUpTime != nil {
-		o.pickUpTime = orderDTO.PickUpTime
+	fmt.Println("Time in domain:", orderDTO.PickUpTime.Time)
+	fmt.Println("Valid in domain:", orderDTO.PickUpTime.Valid)
+
+	if orderDTO.PickUpTime.Valid {
+		o.SetPickUpTime(orderDTO.PickUpTime.Time)
 	}
 
 	orderStatus, ok := OrderStatusStringMap[orderDTO.Status]

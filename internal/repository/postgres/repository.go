@@ -77,7 +77,7 @@ func (r *PgOrderRepository) GetOrderByID(ctx context.Context, id int) (*dto.Orde
 	return &listOrdersDTO.Orders[0], err
 }
 
-func (r *PgOrderRepository) GetOrdersByID(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error) {
+func (r *PgOrderRepository) GetOrdersByIDs(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error) {
 	listOrdersDTO := &dto.ListOrdersDTO{
 		Orders: []dto.OrderDTO{},
 	}

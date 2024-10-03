@@ -2,6 +2,7 @@ package usecase_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -48,7 +49,6 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
 					Cost:       1000,
 					Weight:     5,
-					PickUpTime: nil,
 				}
 
 				facadeMock.AddOrderMock.Expect(context.Background(), order).Return(nil)
@@ -233,7 +233,7 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 				}
 
 				orders.Orders = append(orders.Orders, order)
-				facadeMock.GetOrdersByIDMock.Expect(context.Background(), []int{10}).Return(orders, nil)
+				facadeMock.GetOrdersByIDsMock.Expect(context.Background(), []int{10}).Return(orders, nil)
 				facadeMock.UpdateOrderMock.Return(nil)
 
 			},
@@ -365,7 +365,7 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				order := dto.OrderDTO{
 					ID:         11,
 					ClientID:   10,
-					PickUpTime: &pickUpTime,
+					PickUpTime: sql.NullTime{Time: pickUpTime, Valid: true},
 					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
 				}
 
@@ -387,7 +387,7 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				order := dto.OrderDTO{
 					ID:         11,
 					ClientID:   11,
-					PickUpTime: &pickUpTime,
+					PickUpTime: sql.NullTime{Time: pickUpTime, Valid: true},
 					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
 				}
 
