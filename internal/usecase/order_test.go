@@ -51,7 +51,7 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Weight:     5,
 				}
 
-				facadeMock.AddOrderMock.Expect(context.Background(), order).Return(nil)
+				facadeMock.AddOrderMock.Expect(minimock.AnyContext, order).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -76,7 +76,7 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Cost:       1000,
 					Weight:     5,
 				}
-				facadeMock.AddOrderMock.Expect(context.Background(), order).Return(postgres.ErrAlreadyExist)
+				facadeMock.AddOrderMock.Expect(minimock.AnyContext, order).Return(postgres.ErrAlreadyExist)
 			},
 			wantErr:  true,
 			errValue: postgres.ErrAlreadyExist,
@@ -125,14 +125,14 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 					StoreUntil: successStoreTime,
 					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
 				}
-				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&getOrder, nil)
+				facadeMock.GetOrderByIDMock.Expect(minimock.AnyContext, 10).Return(&getOrder, nil)
 
 				updateOrder := dto.OrderDTO{
 					ClientID:   10,
 					StoreUntil: successStoreTime,
 					Status:     domain.OrderStatusMap[domain.OrderStatusDelete],
 				}
-				facadeMock.UpdateOrderMock.Expect(context.Background(), updateOrder).Return(nil)
+				facadeMock.UpdateOrderMock.Expect(minimock.AnyContext, updateOrder).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -146,7 +146,7 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
 				}
 
-				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(minimock.AnyContext, 10).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderPickedUp,
@@ -161,7 +161,7 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 					Status:     domain.OrderStatusMap[domain.OrderStatusDelete],
 				}
 
-				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(minimock.AnyContext, 10).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderDeleted,
@@ -177,7 +177,7 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
 				}
 
-				facadeMock.GetOrderByIDMock.Expect(context.Background(), 10).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(minimock.AnyContext, 10).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderStoreTimeNotExpired,
@@ -233,7 +233,7 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 				}
 
 				orders.Orders = append(orders.Orders, order)
-				facadeMock.GetOrdersByIDsMock.Expect(context.Background(), []int{10}).Return(orders, nil)
+				facadeMock.GetOrdersByIDsMock.Expect(minimock.AnyContext, []int{10}).Return(orders, nil)
 				facadeMock.UpdateOrderMock.Return(nil)
 
 			},
@@ -294,7 +294,7 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 					orders.Orders = append(orders.Orders, order)
 				}
 
-				facadeMock.GetClientOrdersListMock.Expect(context.Background(), 10).Return(orders, nil)
+				facadeMock.GetClientOrdersListMock.Expect(minimock.AnyContext, 10).Return(orders, nil)
 			},
 			want: &dto.ListOrdersDTO{
 				Orders: []dto.OrderDTO{
@@ -369,7 +369,7 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
 				}
 
-				facadeMock.GetOrderByIDMock.Expect(context.Background(), 11).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(minimock.AnyContext, 11).Return(&order, nil)
 				facadeMock.UpdateOrderMock.Return(nil)
 
 			},
@@ -391,7 +391,7 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 					Status:     domain.OrderStatusMap[domain.OrderStatusPickedUp],
 				}
 
-				facadeMock.GetOrderByIDMock.Expect(context.Background(), 11).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(minimock.AnyContext, 11).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderClientMismatch,
@@ -409,7 +409,7 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 					Status:   domain.OrderStatusMap[domain.OrderStatusReceived],
 				}
 
-				facadeMock.GetOrderByIDMock.Expect(context.Background(), 11).Return(&order, nil)
+				facadeMock.GetOrderByIDMock.Expect(minimock.AnyContext, 11).Return(&order, nil)
 			},
 			wantErr:  true,
 			errValue: usecase.ErrOrderIsNotRefundable,
@@ -476,7 +476,7 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 					refunds.Orders = append(refunds.Orders, refund)
 				}
 
-				facadeMock.GetRefundsListMock.Expect(context.Background(), 0, 0).Return(refunds, nil)
+				facadeMock.GetRefundsListMock.Expect(minimock.AnyContext, 0, 0).Return(refunds, nil)
 
 			},
 			want: &dto.ListOrdersDTO{

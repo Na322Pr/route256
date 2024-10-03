@@ -2,7 +2,6 @@ package cli
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -88,7 +87,7 @@ Example: receive-courier 1 1 2024-10-01 15:20:00 1200 7 bag tape`,
 			Packages:   packages,
 		}
 
-		err = orderUC.ReceiveOrderFromCourier(context.Background(), req)
+		err = orderUC.ReceiveOrderFromCourier(cmd.Context(), req)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -115,7 +114,7 @@ Example: return-courier 1`,
 			return
 		}
 
-		err = orderUC.ReturnOrderToCourier(context.Background(), orderID)
+		err = orderUC.ReturnOrderToCourier(cmd.Context(), orderID)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -148,7 +147,7 @@ Example: give-out-client 1 2 3 4`,
 			orderIDs = append(orderIDs, orderID)
 		}
 
-		err := orderUC.GiveOrderToClient(context.Background(), orderIDs)
+		err := orderUC.GiveOrderToClient(cmd.Context(), orderIDs)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -184,7 +183,7 @@ Example 2, return n last orders: order-list 10 10`,
 		// 	}
 		// }
 
-		orders, err := orderUC.OrderList(context.Background(), clientID)
+		orders, err := orderUC.OrderList(cmd.Context(), clientID)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -220,7 +219,7 @@ Example: refund-client 10 12`,
 			return
 		}
 
-		err = orderUC.GetRefundFromСlient(context.Background(), clientID, orderID)
+		err = orderUC.GetRefundFromСlient(cmd.Context(), clientID, orderID)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -261,7 +260,7 @@ Example 3, return n refunds with offset: order-list 10 10`,
 			}
 		}
 
-		refunds, err := orderUC.RefundList(context.Background(), limit, offset)
+		refunds, err := orderUC.RefundList(cmd.Context(), limit, offset)
 		if err != nil {
 			fmt.Println(err)
 			return

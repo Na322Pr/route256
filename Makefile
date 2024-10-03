@@ -1,7 +1,15 @@
 GO=go
 APP_NAME=pvz-cli-app
 BUILD_DIR=build
-POSTGRES_CONN=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+
+export POSTGRES_DB?=postgres
+export POSTGRES_HOST?=localhost
+export POSTGRES_PORT?=5432
+export POSTGRES_USER?=postgres
+export POSTGRES_PASSWORD?=postgres
+
+POSTGRES_DSN?="postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable"
+
 
 build: clean
 	$(GO) build -o $(BUILD_DIR)/$(APP_NAME) cmd/main.go
@@ -58,13 +66,13 @@ goose-install:
 	go install github.com/pressly/goose/v3/cmd/goose@latest
 
 goose-add:
-	goose -dir ./migrations postgres "$(POSTGRES_CONN)" create rename_me sql
+	goose -dir ./migrations postgres "$(POSTGRES_DSN)" create rename_me sql
 
 goose-up:
-	goose -dir ./migrations postgres "$(POSTGRES_CONN)" up
+	goose -dir ./migrations postgres "$(POSTGRES_DSN)" up
 
 goose-down:
-	goose -dir ./migrations postgres "$(POSTGRES_CONN)" down
+	goose -dir ./migrations postgres "$(POSTGRES_DSN)" down
 
 goose-status:
-	goose -dir ./migrations postgres "$(POSTGRES_CONN)" status
+	goose -dir ./migrations postgres "$(POSTGRES_DSN)" status
