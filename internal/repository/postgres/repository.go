@@ -18,12 +18,16 @@ func NewPgOrderRepository(txManager TransactionManager) *PgOrderRepository {
 }
 
 func (r *PgOrderRepository) AddOrder(ctx context.Context, orderDTO dto.OrderDTO) error {
+	const (
+		op = "PgOrderRepository.AddOrder"
+
+		sqlQuery = `insert into orders(order_id, client_id, store_until, status, cost, weight, packages)
+		values ($1, $2, $3, $4, $5, $6, $7::varchar[])`
+	)
+
 	tx := r.txManager.GetQueryEngine(ctx)
 
-	_, err := tx.Exec(ctx, `
-		insert into orders(order_id, client_id, store_until, status, cost, weight, packages)
-		values ($1, $2, $3, $4, $5, $6, $7::varchar[])
-	`,
+	_, err := tx.Exec(ctx, sqlQuery,
 		orderDTO.ID,
 		orderDTO.ClientID,
 		orderDTO.StoreUntil,
@@ -33,77 +37,96 @@ func (r *PgOrderRepository) AddOrder(ctx context.Context, orderDTO dto.OrderDTO)
 		orderDTO.Packages,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
 }
 
 func (r *PgOrderRepository) UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) error {
+	const (
+		op = "PgOrderRepository.UpdateOrder"
+
+		sqlQuery = `update orders
+        set status = $2, pick_up_time = $3
+        where order_id = $1`
+	)
+
 	tx := r.txManager.GetQueryEngine(ctx)
 
-	_, err := tx.Exec(ctx, `
-		update orders
-        set status = $2,
-            pick_up_time = $3
-        where order_id = $1
-	`,
-		orderDTO.ID,
-		orderDTO.Status,
-		orderDTO.PickUpTime,
-	)
+	_, err := tx.Exec(ctx, sqlQuery, orderDTO.ID, orderDTO.Status, orderDTO.PickUpTime)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
 }
 
 func (r *PgOrderRepository) GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO, error) {
+	const (
+		op = "PgOrderRepository.GetOrderByID"
+
+		sqlQuery = `select * from orders where order_id = $1`
+	)
+
 	tx := r.txManager.GetQueryEngine(ctx)
 
 	listOrdersDTO := &dto.ListOrdersDTO{
 		Orders: []dto.OrderDTO{},
 	}
 
-	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, `
-		select * from orders where order_id = $1
-	`, id)
+	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, sqlQuery, id)
 
 	if len(listOrdersDTO.Orders) == 0 {
-		return nil, ErrOrderNotFound
+		return nil, fmt.Errorf("%s: %w", op, ErrOrderNotFound)
 	}
 
 	return &listOrdersDTO.Orders[0], err
 }
 
 func (r *PgOrderRepository) GetOrdersByIDs(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error) {
+	const (
+		op = "PgOrderRepository.GetOrdersByIDs"
+
+		sqlQuery = `select * from orders where order_id = any($1)`
+	)
+
 	listOrdersDTO := &dto.ListOrdersDTO{
 		Orders: []dto.OrderDTO{},
 	}
 
 	tx := r.txManager.GetQueryEngine(ctx)
-	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, `
-		select * from orders where order_id = any($1)
-	`, ids)
+	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, sqlQuery, ids)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
-	return listOrdersDTO, err
+	return listOrdersDTO, nil
 }
 
 func (r *PgOrderRepository) GetClientOrdersList(ctx context.Context, clientID int) (*dto.ListOrdersDTO, error) {
+	const (
+		op = "PgOrderRepository.GetClientOrdersList"
+
+		sqlQuery = `select * from orders where client_id = $1 and status = $2`
+	)
+
 	listOrdersDTO := &dto.ListOrdersDTO{
 		Orders: []dto.OrderDTO{},
 	}
 
 	tx := r.txManager.GetQueryEngine(ctx)
-	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, `
-		select * from orders where client_id = $1 and status = $2
-	`, clientID, domain.OrderStatusMap[domain.OrderStatusReceived])
+	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, sqlQuery, clientID, domain.OrderStatusMap[domain.OrderStatusReceived])
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
 	return listOrdersDTO, err
 }
 
 func (r *PgOrderRepository) GetRefundsList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) {
+	const op = "PgOrderRepository.GetRefundsList"
+
 	listOrdersDTO := &dto.ListOrdersDTO{
 		Orders: []dto.OrderDTO{},
 	}
@@ -123,6 +146,9 @@ func (r *PgOrderRepository) GetRefundsList(ctx context.Context, limit, offset in
 
 	tx := r.txManager.GetQueryEngine(ctx)
 	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, query, params...)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
 	return listOrdersDTO, err
 }
