@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/georgysavva/scany/v2/pgxscan"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
@@ -71,17 +72,15 @@ func (r *PgOrderRepository) GetOrderByID(ctx context.Context, id int) (*dto.Orde
 
 	tx := r.txManager.GetQueryEngine(ctx)
 
-	listOrdersDTO := &dto.ListOrdersDTO{
-		Orders: []dto.OrderDTO{},
-	}
+	orders := make([]dto.OrderDTO, 1)
 
-	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, sqlQuery, id)
+	err := pgxscan.Select(ctx, tx, &orders, sqlQuery, id)
 
-	if len(listOrdersDTO.Orders) == 0 {
+	if len(orders) == 0 {
 		return nil, fmt.Errorf("%s: %w", op, ErrOrderNotFound)
 	}
 
-	return &listOrdersDTO.Orders[0], err
+	return &orders[0], err
 }
 
 func (r *PgOrderRepository) GetOrdersByIDs(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error) {
@@ -91,17 +90,15 @@ func (r *PgOrderRepository) GetOrdersByIDs(ctx context.Context, ids []int) (*dto
 		sqlQuery = `select * from orders where order_id = any($1)`
 	)
 
-	listOrdersDTO := &dto.ListOrdersDTO{
-		Orders: []dto.OrderDTO{},
-	}
+	orders := make([]dto.OrderDTO, 1)
 
 	tx := r.txManager.GetQueryEngine(ctx)
-	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, sqlQuery, ids)
+	err := pgxscan.Select(ctx, tx, &orders, sqlQuery, ids)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return listOrdersDTO, nil
+	return &dto.ListOrdersDTO{Orders: orders}, nil
 }
 
 func (r *PgOrderRepository) GetClientOrdersList(ctx context.Context, clientID int) (*dto.ListOrdersDTO, error) {
@@ -111,28 +108,24 @@ func (r *PgOrderRepository) GetClientOrdersList(ctx context.Context, clientID in
 		sqlQuery = `select * from orders where client_id = $1 and status = $2`
 	)
 
-	listOrdersDTO := &dto.ListOrdersDTO{
-		Orders: []dto.OrderDTO{},
-	}
+	orders := make([]dto.OrderDTO, 1)
 
 	tx := r.txManager.GetQueryEngine(ctx)
-	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, sqlQuery, clientID, domain.OrderStatusMap[domain.OrderStatusReceived])
+	err := pgxscan.Select(ctx, tx, &orders, sqlQuery, clientID, domain.OrderStatusMap[domain.OrderStatusReceived])
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return listOrdersDTO, err
+	return &dto.ListOrdersDTO{Orders: orders}, err
 }
 
 func (r *PgOrderRepository) GetRefundsList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) {
 	const op = "PgOrderRepository.GetRefundsList"
 
-	listOrdersDTO := &dto.ListOrdersDTO{
-		Orders: []dto.OrderDTO{},
-	}
+	orders := make([]dto.OrderDTO, 1)
 
 	query := "select * from orders where status = $1 order by order_id "
-	params := []interface{}{domain.OrderStatusMap[domain.OrderStatusRefunded]}
+	params := []any{domain.OrderStatusMap[domain.OrderStatusRefunded]}
 
 	if limit > 0 {
 		query += "limit $2 "
@@ -140,15 +133,15 @@ func (r *PgOrderRepository) GetRefundsList(ctx context.Context, limit, offset in
 	}
 
 	if offset > 0 {
-		query += "offset $" + fmt.Sprint(len(params)+1)
+		query += "offset $" + strconv.Itoa(len(params)+1)
 		params = append(params, offset)
 	}
 
 	tx := r.txManager.GetQueryEngine(ctx)
-	err := pgxscan.Select(ctx, tx, &listOrdersDTO.Orders, query, params...)
+	err := pgxscan.Select(ctx, tx, &orders, query, params...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return listOrdersDTO, err
+	return &dto.ListOrdersDTO{Orders: orders}, err
 }
