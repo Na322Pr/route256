@@ -282,6 +282,7 @@ func (cli *CLI) Run(ctx context.Context, syncChan chan<- struct{}) {
 
 	inputChan := make(chan string)
 	wg := sync.WaitGroup{}
+	var mu sync.Mutex
 
 	wg.Add(1)
 	go func(ctx context.Context) {
@@ -303,24 +304,34 @@ func (cli *CLI) Run(ctx context.Context, syncChan chan<- struct{}) {
 	for {
 		select {
 		case <-ctx.Done():
+			wg.Done()
 			shutdown(syncChan)
 			return
 		case input := <-inputChan:
 			if input == "exit" {
+				wg.Done()
 				shutdown(syncChan)
 				return
 			}
 
 			commandArgs := strings.Fields(input)
-			cli.rootCmd.SetArgs(commandArgs)
-			cli.rootCmd.ExecuteContext(ctx)
+
+			wg.Add(1)
+			go func(commandArgs []string) {
+				defer wg.Done()
+				mu.Lock()
+				defer mu.Unlock()
+				cli.rootCmd.SetArgs(commandArgs)
+				cli.rootCmd.ExecuteContext(ctx)
+			}(commandArgs)
+
 			fmt.Print("> ")
 		}
 	}
 }
 
 func shutdown(syncChan chan<- struct{}) {
-	fmt.Println("\nShutting down..")
+	fmt.Println("\nShutting down...")
 	syncChan <- struct{}{}
 	close(syncChan)
 }
