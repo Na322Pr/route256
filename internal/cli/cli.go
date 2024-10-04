@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -277,6 +278,30 @@ Example 3, return n refunds with offset: order-list 10 10`,
 	}
 }
 
+func (cli *CLI) ReturnSetGoroutinsCountCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "set-goroutines-count",
+		Short: "Return order to courier",
+		Long: `Usage: set-goroutines-count count
+Example: set-goroutines-count 2`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) != 1 {
+				fmt.Println("Incorrect args count. Expected 1 argument: count")
+				return
+			}
+
+			count, err := strconv.Atoi(args[0])
+			if err != nil {
+				fmt.Println("count is incorrect")
+				return
+			}
+
+			runtime.GOMAXPROCS(count)
+			fmt.Print("Goroutins count set to ", count, "\n> ")
+		},
+	}
+}
+
 func (cli *CLI) Run(ctx context.Context, syncChan chan<- struct{}) {
 	fmt.Print("Running App... Type 'exit' to quit.\n> ")
 
@@ -357,5 +382,6 @@ func NewCLI(orderUseCase *usecase.OrderUseCase) *CLI {
 	CLI.rootCmd.AddCommand(CLI.ReturnGetOrderListCmd())
 	CLI.rootCmd.AddCommand(CLI.ReturnRefundFromCustomerCmd())
 	CLI.rootCmd.AddCommand(CLI.ReturnGetRefundListCmd())
+	CLI.rootCmd.AddCommand(CLI.ReturnSetGoroutinsCountCmd())
 	return CLI
 }
