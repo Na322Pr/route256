@@ -17,11 +17,12 @@ import (
 const psqlDSN = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 
 func main() {
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-
 	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, psqlDSN)
+	ctxWithCancel, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	syncChan := make(chan struct{})
+	defer cancel()
+
+	pool, err := pgxpool.New(ctxWithCancel, psqlDSN)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,9 +30,13 @@ func main() {
 
 	facade := repository.NewFacade(pool)
 	orderUseCase := usecase.NewOrderUseCase(facade)
+	cli := cli.NewCLI(orderUseCase)
 
-	go cli.Run(orderUseCase)
+	go cli.Run(ctxWithCancel, syncChan)
 
-	<-stop
-	fmt.Println("\nExiting...")
+	for range syncChan {
+		fmt.Println("All goroutines are done")
+	}
+	fmt.Println("Exiting...")
+	os.Exit(0)
 }
