@@ -10,13 +10,16 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/cli"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/config"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 )
 
-const psqlDSN = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
-
 func main() {
+	cfg := config.MustLoad()
+
+	psqlDSN := getPsqlDSN(cfg)
+
 	ctx := context.Background()
 	ctxWithCancel, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	syncChan := make(chan struct{})
@@ -39,4 +42,14 @@ func main() {
 	}
 	fmt.Println("Exiting...")
 	os.Exit(0)
+}
+
+func getPsqlDSN(cfg *config.Config) string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		cfg.PG.User,
+		cfg.PG.Password,
+		cfg.PG.Host,
+		cfg.PG.Port,
+		cfg.PG.DB,
+	)
 }

@@ -10,12 +10,13 @@ export POSTGRES_PASSWORD?=postgres
 
 POSTGRES_DSN?=postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
 
+CONFIG_PATH=./config/config.yaml
 
 build: clean
 	$(GO) build -o $(BUILD_DIR)/$(APP_NAME) cmd/main.go
 
 run: build
-	./$(BUILD_DIR)/$(APP_NAME)
+	./$(BUILD_DIR)/$(APP_NAME) --config="$(CONFIG_PATH)"
 
 install:
 	@echo "Installing dependencies..."
