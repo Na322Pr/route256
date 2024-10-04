@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -277,46 +278,51 @@ Example 3, return n refunds with offset: order-list 10 10`,
 }
 
 func (cli *CLI) Run(ctx context.Context, syncChan chan<- struct{}) {
-	fmt.Println("Running App... Type 'exit' to quit.")
+	fmt.Print("Running App... Type 'exit' to quit.\n> ")
 
 	inputChan := make(chan string)
+	wg := sync.WaitGroup{}
 
-	go func() {
+	wg.Add(1)
+	go func(ctx context.Context) {
+		defer wg.Done()
 		scanner := bufio.NewScanner(os.Stdin)
 
 		for {
-			fmt.Print("> ")
-			if scanner.Scan() {
-				inputChan <- scanner.Text()
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				if scanner.Scan() {
+					inputChan <- scanner.Text()
+				}
 			}
 		}
-
-	}()
+	}(ctx)
 
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("\nShutting down...")
-			syncChan <- struct{}{}
-			close(syncChan)
+			shutdown(syncChan)
 			return
 		case input := <-inputChan:
 			if input == "exit" {
-				fmt.Println("nShutting down..")
-				syncChan <- struct{}{}
-				close(syncChan)
-				os.Exit(0)
+				shutdown(syncChan)
 				return
 			}
 
 			commandArgs := strings.Fields(input)
 			cli.rootCmd.SetArgs(commandArgs)
-
-			if err := cli.rootCmd.ExecuteContext(ctx); err != nil {
-				fmt.Println("Error:", err)
-			}
+			cli.rootCmd.ExecuteContext(ctx)
+			fmt.Print("> ")
 		}
 	}
+}
+
+func shutdown(syncChan chan<- struct{}) {
+	fmt.Println("\nShutting down..")
+	syncChan <- struct{}{}
+	close(syncChan)
 }
 
 func NewCLI(orderUseCase *usecase.OrderUseCase) *CLI {
