@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
@@ -117,14 +118,52 @@ func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int) e
 		orders[i].SetPickUpTime(time.Now())
 	}
 
-	// Multiple updates
-	for _, order := range orders {
-		if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
-			return fmt.Errorf("%s: %w", op, err)
-		}
-	}
+	uc.giveClientPool(ctx, orders)
 
 	return nil
+}
+
+func (uc *OrderUseCase) giveClientPool(ctx context.Context, orders []*domain.Order) {
+	const numWorkers = 4
+	numOrders := len(orders)
+
+	wg := sync.WaitGroup{}
+	resChan := make(chan string, numOrders)
+	orderChan := make(chan *domain.Order, numOrders)
+
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go uc.giveClientWorker(ctx, &wg, orderChan, resChan)
+	}
+
+	go func() {
+		for _, order := range orders {
+			orderChan <- order
+		}
+		close(orderChan)
+	}()
+
+	go func() {
+		wg.Wait()
+		close(resChan)
+	}()
+
+	for res := range resChan {
+		fmt.Println(res)
+	}
+}
+
+func (uc *OrderUseCase) giveClientWorker(ctx context.Context, wg *sync.WaitGroup, orders <-chan *domain.Order, result chan<- string) {
+	defer wg.Done()
+
+	for order := range orders {
+		if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
+			result <- fmt.Sprintf("Order %d issue failed", order.GetOrderID())
+			continue
+		}
+
+		result <- fmt.Sprintf("Order %d issued successfully", order.GetOrderID())
+	}
 }
 
 func (uc *OrderUseCase) OrderList(ctx context.Context, clientID int) (*dto.ListOrdersDTO, error) {
@@ -148,8 +187,6 @@ func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID, orde
 
 	var order domain.Order
 	order.FromDTO(*orderDTO)
-
-	fmt.Println(order.GetOrderPickUpTime())
 
 	if order.GetOrderClientID() != clientID {
 		return fmt.Errorf("%s: %w", op, ErrOrderClientMismatch)

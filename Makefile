@@ -8,7 +8,7 @@ export POSTGRES_PORT?=5432
 export POSTGRES_USER?=postgres
 export POSTGRES_PASSWORD?=postgres
 
-POSTGRES_DSN?="postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable"
+POSTGRES_DSN?=postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
 
 
 build: clean

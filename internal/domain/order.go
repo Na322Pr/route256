@@ -226,8 +226,6 @@ func (o *Order) AddPackage(packageType OrderPackage) error {
 }
 
 func (o *Order) SetPickUpTime(pickUpTime time.Time) {
-	fmt.Println(pickUpTime)
-	fmt.Println(time.Now())
 	o.pickUpTime = pickUpTime
 }
 
@@ -325,9 +323,6 @@ func (o *Order) FromDTO(orderDTO dto.OrderDTO) error {
 	}
 
 	o.SetStoreUntil(orderDTO.StoreUntil)
-
-	fmt.Println("Time in domain:", orderDTO.PickUpTime.Time)
-	fmt.Println("Valid in domain:", orderDTO.PickUpTime.Valid)
 
 	if orderDTO.PickUpTime.Valid {
 		o.SetPickUpTime(orderDTO.PickUpTime.Time)
