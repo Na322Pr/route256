@@ -2,8 +2,13 @@ package cli
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -13,12 +18,78 @@ import (
 
 	"github.com/spf13/cobra"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 )
 
 type CLI struct {
-	orderUseCase usecase.OrderUseCase
-	rootCmd      *cobra.Command
+	serviceURL string
+	rootCmd    *cobra.Command
+}
+
+type OrderIDRequest struct {
+	OrderID int64 `json:"order_id"`
+}
+
+type OrderCLientIDRequest struct {
+	OrderID  int64 `json:"order_id"`
+	ClientID int   `json:"client_id"`
+}
+
+type OrdersIDsRequest struct {
+	OrdersIDs []int64 `json:"orders_ids"`
+}
+
+type OrderResponce struct {
+	ID         string    `json:"id"`
+	ClientID   int       `json:"clientId"`
+	StoreUntil time.Time `json:"storeUntil"`
+	Status     string    `json:"status"`
+	Cost       int       `json:"cost"`
+	Weight     int       `json:"weight"`
+	Packages   []string  `json:"packages"`
+	PickUpTime string    `json:"pickUpTime,omitempty"`
+}
+
+type OrdersResponce struct {
+	Orders []OrderResponce `json:"orders"`
+}
+
+func (cli *CLI) getRequest(method string, params url.Values) (*OrdersResponce, error) {
+	resp, err := http.Get(fmt.Sprintf("%s/%s?%s", cli.serviceURL, method, params.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var orders OrdersResponce
+	if err := json.Unmarshal(body, &orders); err != nil {
+		return &OrdersResponce{}, err
+	}
+
+	return &orders, nil
+}
+
+func (cli *CLI) postRequest(method string, data any) (int, error) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return 0, err
+	}
+
+	resp, err := http.Post(
+		fmt.Sprintf("%s/%s", cli.serviceURL, method),
+		"application/json",
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
 }
 
 func (cli *CLI) ReturnReceiveOrderFromCourierCmd() *cobra.Command {
@@ -81,9 +152,9 @@ Example: receive-courier 1 1 2024-10-01 15:20:00 1200 7 bag tape`,
 				Packages:   packages,
 			}
 
-			err = cli.orderUseCase.ReceiveOrderFromCourier(cmd.Context(), req)
-			if err != nil {
-				fmt.Println(err)
+			status, err := cli.postRequest("ReceiveCourier", req)
+			if err != nil || status != 200 {
+				fmt.Println("Error adding order")
 				return
 			}
 
@@ -110,9 +181,9 @@ Example: return-courier 1`,
 				return
 			}
 
-			err = cli.orderUseCase.ReturnOrderToCourier(cmd.Context(), int64(orderID))
-			if err != nil {
-				fmt.Println(err)
+			status, err := cli.postRequest("ReturnCourier", OrderIDRequest{OrderID: int64(orderID)})
+			if err != nil || status != 200 {
+				fmt.Println("Error returning order")
 				return
 			}
 
@@ -145,11 +216,13 @@ Example: give-out-client 1 2 3 4`,
 				orderIDs = append(orderIDs, int64(orderID))
 			}
 
-			err := cli.orderUseCase.GiveOrderToClient(cmd.Context(), orderIDs)
-			if err != nil {
-				fmt.Println(err)
+			status, err := cli.postRequest("GiveOutClient", OrdersIDsRequest{OrdersIDs: orderIDs})
+			if err != nil || status != 200 {
+				fmt.Println("Error with order issue")
 				return
 			}
+
+			fmt.Println("Orders successfully issued to the client")
 		},
 	}
 }
@@ -181,14 +254,18 @@ Example 2, return n last orders: order-list 10 10`,
 			// 	}
 			// }
 
-			orders, err := cli.orderUseCase.OrderList(cmd.Context(), clientID)
+			params := url.Values{}
+			params.Add("client_id", fmt.Sprintf("%d", clientID))
+
+			orders, err := cli.getRequest("OrderList", params)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("Error while list order")
+				return
 			}
 
 			fmt.Println("Order IDs list:")
 			for i, order := range orders.Orders {
-				fmt.Printf("%d:\t%d\n", i+1, order.ID)
+				fmt.Printf("%d:\t%s\n", i+1, order.ID)
 			}
 
 		},
@@ -219,9 +296,9 @@ Example: refund-client 10 12`,
 				return
 			}
 
-			err = cli.orderUseCase.GetRefundFromСlient(cmd.Context(), clientID, int64(orderID))
-			if err != nil {
-				fmt.Println(err)
+			status, err := cli.postRequest("RefundClient", OrderCLientIDRequest{OrderID: int64(orderID), ClientID: clientID})
+			if err != nil || status != 200 {
+				fmt.Println("Error with order refund")
 				return
 			}
 
@@ -264,15 +341,19 @@ Example 3, return n refunds with offset: order-list 10 10`,
 				}
 			}
 
-			refunds, err := cli.orderUseCase.RefundList(cmd.Context(), limit, offset)
+			params := url.Values{}
+			params.Add("limit", fmt.Sprintf("%d", limit))
+			params.Add("offset", fmt.Sprintf("%d", offset))
+
+			refunds, err := cli.getRequest("RefundList", params)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("Error while refund order")
 				return
 			}
 
 			fmt.Println("Refund IDs list:")
 			for i, order := range refunds.Orders {
-				fmt.Printf("%d:\t%d\n", i+1, order.ID)
+				fmt.Printf("%d:\t%s\n", i+1, order.ID)
 			}
 		},
 	}
@@ -361,9 +442,9 @@ func shutdown(syncChan chan<- struct{}) {
 	close(syncChan)
 }
 
-func NewCLI(orderUseCase *usecase.OrderUseCase) *CLI {
+func NewCLI(serviceURL string) *CLI {
 	CLI := &CLI{
-		orderUseCase: *orderUseCase,
+		serviceURL: serviceURL,
 		rootCmd: &cobra.Command{
 			Use:   "homework",
 			Short: "A brief description of your application",
