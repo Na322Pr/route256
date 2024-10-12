@@ -164,7 +164,7 @@ func (s *OrderSuite) TestGetOrdersByIDSuccess() {
 	err = s.repo.AddOrder(context.Background(), order)
 	s.Require().NoError(err)
 
-	_, err = s.repo.GetOrdersByIDs(context.Background(), []int{10, 11})
+	_, err = s.repo.GetOrdersByIDs(context.Background(), []int64{10, 11})
 	s.Require().NoError(err)
 }
 

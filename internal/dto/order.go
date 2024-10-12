@@ -6,7 +6,7 @@ import (
 )
 
 type OrderDTO struct {
-	ID         int          `json:"id" db:"order_id"`
+	ID         int64        `json:"id" db:"order_id"`
 	ClientID   int          `json:"clientID" db:"client_id"`
 	StoreUntil time.Time    `json:"storeUntil" db:"store_until"`
 	Status     string       `json:"status" db:"status"`
@@ -21,7 +21,7 @@ type ListOrdersDTO struct {
 }
 
 type AddOrder struct {
-	ID         int       `json:"id"`
+	ID         int64     `json:"id"`
 	ClientID   int       `json:"clientID"`
 	StoreUntil time.Time `json:"storeUntil"`
 	Cost       int       `json:"cost"`

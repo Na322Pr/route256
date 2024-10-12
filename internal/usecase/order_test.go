@@ -192,7 +192,7 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 			tt.setup(facadeMock)
 			uc := usecase.NewOrderUseCase(facadeMock)
 
-			err := uc.ReturnOrderToCourier(context.Background(), tt.args.orderID)
+			err := uc.ReturnOrderToCourier(context.Background(), int64(tt.args.orderID))
 			if tt.wantErr {
 				assert.ErrorIs(t, err, tt.errValue)
 				return
@@ -205,7 +205,7 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 
 func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 	type args struct {
-		orderIDs []int
+		orderIDs []int64
 	}
 
 	tests := []struct {
@@ -217,7 +217,7 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 	}{
 		{
 			name: "Success_GiveOrderToClient",
-			args: args{orderIDs: []int{10}},
+			args: args{orderIDs: []int64{10}},
 			setup: func(facadeMock *mock.FacadeMock) {
 
 				successStoreTime := time.Now().Add(24 * time.Hour)
@@ -233,7 +233,7 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 				}
 
 				orders.Orders = append(orders.Orders, order)
-				facadeMock.GetOrdersByIDsMock.Expect(minimock.AnyContext, []int{10}).Return(orders, nil)
+				facadeMock.GetOrdersByIDsMock.Expect(minimock.AnyContext, []int64{10}).Return(orders, nil)
 				facadeMock.UpdateOrderMock.Return(nil)
 
 			},
@@ -283,7 +283,7 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 
 				for i := 11; i <= 12; i++ {
 					order := dto.OrderDTO{
-						ID:         i,
+						ID:         int64(i),
 						ClientID:   10,
 						StoreUntil: successStoreTime,
 						Cost:       100 * i,
@@ -343,7 +343,7 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 	type args struct {
 		clientID int
-		orderID  int
+		orderID  int64
 	}
 
 	tests := []struct {
@@ -465,7 +465,7 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 
 				for i := 11; i <= 12; i++ {
 					refund := dto.OrderDTO{
-						ID:         i,
+						ID:         int64(i),
 						ClientID:   10,
 						StoreUntil: successStoreTime,
 						Status:     domain.OrderStatusMap[domain.OrderStatusRefunded],

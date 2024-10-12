@@ -46,7 +46,7 @@ func (s *StorageFacade) UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) 
 	})
 }
 
-func (s *StorageFacade) GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO, error) {
+func (s *StorageFacade) GetOrderByID(ctx context.Context, id int64) (*dto.OrderDTO, error) {
 	var orderDTO *dto.OrderDTO
 
 	err := s.txManager.RunReadCommitted(ctx, func(ctxTx context.Context) error {
@@ -62,7 +62,7 @@ func (s *StorageFacade) GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO
 	return orderDTO, err
 }
 
-func (s *StorageFacade) GetOrdersByIDs(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error) {
+func (s *StorageFacade) GetOrdersByIDs(ctx context.Context, ids []int64) (*dto.ListOrdersDTO, error) {
 	var listOrdersDTO *dto.ListOrdersDTO
 
 	err := s.txManager.RunReadCommitted(ctx, func(ctxTx context.Context) error {

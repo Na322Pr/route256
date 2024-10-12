@@ -13,8 +13,8 @@ import (
 type Facade interface {
 	AddOrder(ctx context.Context, orderDTO dto.OrderDTO) error
 	UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) error
-	GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO, error)
-	GetOrdersByIDs(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error)
+	GetOrderByID(ctx context.Context, id int64) (*dto.OrderDTO, error)
+	GetOrdersByIDs(ctx context.Context, ids []int64) (*dto.ListOrdersDTO, error)
 	GetClientOrdersList(ctx context.Context, clientID int) (*dto.ListOrdersDTO, error)
 	GetRefundsList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) // Update() error
 }
@@ -48,7 +48,7 @@ func (uc *OrderUseCase) ReceiveOrderFromCourier(ctx context.Context, req dto.Add
 	return nil
 }
 
-func (uc *OrderUseCase) ReturnOrderToCourier(ctx context.Context, orderID int) error {
+func (uc *OrderUseCase) ReturnOrderToCourier(ctx context.Context, orderID int64) error {
 	op := "OrderUseCase.ReturnOrderToCourier"
 
 	orderDTO, err := uc.repo.GetOrderByID(ctx, orderID)
@@ -82,7 +82,7 @@ func (uc *OrderUseCase) ReturnOrderToCourier(ctx context.Context, orderID int) e
 	return nil
 }
 
-func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int) error {
+func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int64) error {
 	op := "OrderUseCase.GiveOrderToClient"
 
 	if len(orderIDs) == 0 {
@@ -177,7 +177,7 @@ func (uc *OrderUseCase) OrderList(ctx context.Context, clientID int) (*dto.ListO
 	return listOrdersDTO, nil
 }
 
-func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID, orderID int) error {
+func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID int, orderID int64) error {
 	op := "OrderUseCase.GetRefundFromСlient"
 
 	orderDTO, err := uc.repo.GetOrderByID(ctx, orderID)

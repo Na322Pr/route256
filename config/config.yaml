@@ -4,3 +4,7 @@ postgres:
   port: 5432
   user: "postgres"
   password: "postgres"
+
+grpc:
+  host: "localhost"
+  port: 7001

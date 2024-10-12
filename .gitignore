@@ -145,8 +145,14 @@ fabric.properties
 # Build
 /build
 
+# bin
+/bin
+
 # idea
 /.idea
 
 # pgdata
 /pgdata
+
+# vendor
+/vendor.protogen

@@ -9,7 +9,8 @@ import (
 )
 
 type Config struct {
-	PG `yaml:"postgres"`
+	PG   `yaml:"postgres"`
+	GRPC `yaml:"grpc"`
 }
 
 type PG struct {
@@ -18,6 +19,11 @@ type PG struct {
 	Port     int    `yaml:"port"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+}
+
+type GRPC struct {
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
 }
 
 func MustLoad() *Config {

@@ -33,16 +33,16 @@ type FacadeMock struct {
 	beforeGetClientOrdersListCounter uint64
 	GetClientOrdersListMock          mFacadeMockGetClientOrdersList
 
-	funcGetOrderByID          func(ctx context.Context, id int) (op1 *dto.OrderDTO, err error)
+	funcGetOrderByID          func(ctx context.Context, id int64) (op1 *dto.OrderDTO, err error)
 	funcGetOrderByIDOrigin    string
-	inspectFuncGetOrderByID   func(ctx context.Context, id int)
+	inspectFuncGetOrderByID   func(ctx context.Context, id int64)
 	afterGetOrderByIDCounter  uint64
 	beforeGetOrderByIDCounter uint64
 	GetOrderByIDMock          mFacadeMockGetOrderByID
 
-	funcGetOrdersByIDs          func(ctx context.Context, ids []int) (lp1 *dto.ListOrdersDTO, err error)
+	funcGetOrdersByIDs          func(ctx context.Context, ids []int64) (lp1 *dto.ListOrdersDTO, err error)
 	funcGetOrdersByIDsOrigin    string
-	inspectFuncGetOrdersByIDs   func(ctx context.Context, ids []int)
+	inspectFuncGetOrdersByIDs   func(ctx context.Context, ids []int64)
 	afterGetOrdersByIDsCounter  uint64
 	beforeGetOrdersByIDsCounter uint64
 	GetOrdersByIDsMock          mFacadeMockGetOrdersByIDs
@@ -805,13 +805,13 @@ type FacadeMockGetOrderByIDExpectation struct {
 // FacadeMockGetOrderByIDParams contains parameters of the Facade.GetOrderByID
 type FacadeMockGetOrderByIDParams struct {
 	ctx context.Context
-	id  int
+	id  int64
 }
 
 // FacadeMockGetOrderByIDParamPtrs contains pointers to parameters of the Facade.GetOrderByID
 type FacadeMockGetOrderByIDParamPtrs struct {
 	ctx *context.Context
-	id  *int
+	id  *int64
 }
 
 // FacadeMockGetOrderByIDResults contains results of the Facade.GetOrderByID
@@ -838,7 +838,7 @@ func (mmGetOrderByID *mFacadeMockGetOrderByID) Optional() *mFacadeMockGetOrderBy
 }
 
 // Expect sets up expected params for Facade.GetOrderByID
-func (mmGetOrderByID *mFacadeMockGetOrderByID) Expect(ctx context.Context, id int) *mFacadeMockGetOrderByID {
+func (mmGetOrderByID *mFacadeMockGetOrderByID) Expect(ctx context.Context, id int64) *mFacadeMockGetOrderByID {
 	if mmGetOrderByID.mock.funcGetOrderByID != nil {
 		mmGetOrderByID.mock.t.Fatalf("FacadeMock.GetOrderByID mock is already set by Set")
 	}
@@ -886,7 +886,7 @@ func (mmGetOrderByID *mFacadeMockGetOrderByID) ExpectCtxParam1(ctx context.Conte
 }
 
 // ExpectIdParam2 sets up expected param id for Facade.GetOrderByID
-func (mmGetOrderByID *mFacadeMockGetOrderByID) ExpectIdParam2(id int) *mFacadeMockGetOrderByID {
+func (mmGetOrderByID *mFacadeMockGetOrderByID) ExpectIdParam2(id int64) *mFacadeMockGetOrderByID {
 	if mmGetOrderByID.mock.funcGetOrderByID != nil {
 		mmGetOrderByID.mock.t.Fatalf("FacadeMock.GetOrderByID mock is already set by Set")
 	}
@@ -909,7 +909,7 @@ func (mmGetOrderByID *mFacadeMockGetOrderByID) ExpectIdParam2(id int) *mFacadeMo
 }
 
 // Inspect accepts an inspector function that has same arguments as the Facade.GetOrderByID
-func (mmGetOrderByID *mFacadeMockGetOrderByID) Inspect(f func(ctx context.Context, id int)) *mFacadeMockGetOrderByID {
+func (mmGetOrderByID *mFacadeMockGetOrderByID) Inspect(f func(ctx context.Context, id int64)) *mFacadeMockGetOrderByID {
 	if mmGetOrderByID.mock.inspectFuncGetOrderByID != nil {
 		mmGetOrderByID.mock.t.Fatalf("Inspect function is already set for FacadeMock.GetOrderByID")
 	}
@@ -934,7 +934,7 @@ func (mmGetOrderByID *mFacadeMockGetOrderByID) Return(op1 *dto.OrderDTO, err err
 }
 
 // Set uses given function f to mock the Facade.GetOrderByID method
-func (mmGetOrderByID *mFacadeMockGetOrderByID) Set(f func(ctx context.Context, id int) (op1 *dto.OrderDTO, err error)) *FacadeMock {
+func (mmGetOrderByID *mFacadeMockGetOrderByID) Set(f func(ctx context.Context, id int64) (op1 *dto.OrderDTO, err error)) *FacadeMock {
 	if mmGetOrderByID.defaultExpectation != nil {
 		mmGetOrderByID.mock.t.Fatalf("Default expectation is already set for the Facade.GetOrderByID method")
 	}
@@ -950,7 +950,7 @@ func (mmGetOrderByID *mFacadeMockGetOrderByID) Set(f func(ctx context.Context, i
 
 // When sets expectation for the Facade.GetOrderByID which will trigger the result defined by the following
 // Then helper
-func (mmGetOrderByID *mFacadeMockGetOrderByID) When(ctx context.Context, id int) *FacadeMockGetOrderByIDExpectation {
+func (mmGetOrderByID *mFacadeMockGetOrderByID) When(ctx context.Context, id int64) *FacadeMockGetOrderByIDExpectation {
 	if mmGetOrderByID.mock.funcGetOrderByID != nil {
 		mmGetOrderByID.mock.t.Fatalf("FacadeMock.GetOrderByID mock is already set by Set")
 	}
@@ -992,7 +992,7 @@ func (mmGetOrderByID *mFacadeMockGetOrderByID) invocationsDone() bool {
 }
 
 // GetOrderByID implements mm_usecase.Facade
-func (mmGetOrderByID *FacadeMock) GetOrderByID(ctx context.Context, id int) (op1 *dto.OrderDTO, err error) {
+func (mmGetOrderByID *FacadeMock) GetOrderByID(ctx context.Context, id int64) (op1 *dto.OrderDTO, err error) {
 	mm_atomic.AddUint64(&mmGetOrderByID.beforeGetOrderByIDCounter, 1)
 	defer mm_atomic.AddUint64(&mmGetOrderByID.afterGetOrderByIDCounter, 1)
 
@@ -1148,13 +1148,13 @@ type FacadeMockGetOrdersByIDsExpectation struct {
 // FacadeMockGetOrdersByIDsParams contains parameters of the Facade.GetOrdersByIDs
 type FacadeMockGetOrdersByIDsParams struct {
 	ctx context.Context
-	ids []int
+	ids []int64
 }
 
 // FacadeMockGetOrdersByIDsParamPtrs contains pointers to parameters of the Facade.GetOrdersByIDs
 type FacadeMockGetOrdersByIDsParamPtrs struct {
 	ctx *context.Context
-	ids *[]int
+	ids *[]int64
 }
 
 // FacadeMockGetOrdersByIDsResults contains results of the Facade.GetOrdersByIDs
@@ -1181,7 +1181,7 @@ func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Optional() *mFacadeMockGetOrd
 }
 
 // Expect sets up expected params for Facade.GetOrdersByIDs
-func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Expect(ctx context.Context, ids []int) *mFacadeMockGetOrdersByIDs {
+func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Expect(ctx context.Context, ids []int64) *mFacadeMockGetOrdersByIDs {
 	if mmGetOrdersByIDs.mock.funcGetOrdersByIDs != nil {
 		mmGetOrdersByIDs.mock.t.Fatalf("FacadeMock.GetOrdersByIDs mock is already set by Set")
 	}
@@ -1229,7 +1229,7 @@ func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) ExpectCtxParam1(ctx context.C
 }
 
 // ExpectIdsParam2 sets up expected param ids for Facade.GetOrdersByIDs
-func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) ExpectIdsParam2(ids []int) *mFacadeMockGetOrdersByIDs {
+func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) ExpectIdsParam2(ids []int64) *mFacadeMockGetOrdersByIDs {
 	if mmGetOrdersByIDs.mock.funcGetOrdersByIDs != nil {
 		mmGetOrdersByIDs.mock.t.Fatalf("FacadeMock.GetOrdersByIDs mock is already set by Set")
 	}
@@ -1252,7 +1252,7 @@ func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) ExpectIdsParam2(ids []int) *m
 }
 
 // Inspect accepts an inspector function that has same arguments as the Facade.GetOrdersByIDs
-func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Inspect(f func(ctx context.Context, ids []int)) *mFacadeMockGetOrdersByIDs {
+func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Inspect(f func(ctx context.Context, ids []int64)) *mFacadeMockGetOrdersByIDs {
 	if mmGetOrdersByIDs.mock.inspectFuncGetOrdersByIDs != nil {
 		mmGetOrdersByIDs.mock.t.Fatalf("Inspect function is already set for FacadeMock.GetOrdersByIDs")
 	}
@@ -1277,7 +1277,7 @@ func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Return(lp1 *dto.ListOrdersDTO
 }
 
 // Set uses given function f to mock the Facade.GetOrdersByIDs method
-func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Set(f func(ctx context.Context, ids []int) (lp1 *dto.ListOrdersDTO, err error)) *FacadeMock {
+func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Set(f func(ctx context.Context, ids []int64) (lp1 *dto.ListOrdersDTO, err error)) *FacadeMock {
 	if mmGetOrdersByIDs.defaultExpectation != nil {
 		mmGetOrdersByIDs.mock.t.Fatalf("Default expectation is already set for the Facade.GetOrdersByIDs method")
 	}
@@ -1293,7 +1293,7 @@ func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) Set(f func(ctx context.Contex
 
 // When sets expectation for the Facade.GetOrdersByIDs which will trigger the result defined by the following
 // Then helper
-func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) When(ctx context.Context, ids []int) *FacadeMockGetOrdersByIDsExpectation {
+func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) When(ctx context.Context, ids []int64) *FacadeMockGetOrdersByIDsExpectation {
 	if mmGetOrdersByIDs.mock.funcGetOrdersByIDs != nil {
 		mmGetOrdersByIDs.mock.t.Fatalf("FacadeMock.GetOrdersByIDs mock is already set by Set")
 	}
@@ -1335,7 +1335,7 @@ func (mmGetOrdersByIDs *mFacadeMockGetOrdersByIDs) invocationsDone() bool {
 }
 
 // GetOrdersByIDs implements mm_usecase.Facade
-func (mmGetOrdersByIDs *FacadeMock) GetOrdersByIDs(ctx context.Context, ids []int) (lp1 *dto.ListOrdersDTO, err error) {
+func (mmGetOrdersByIDs *FacadeMock) GetOrdersByIDs(ctx context.Context, ids []int64) (lp1 *dto.ListOrdersDTO, err error) {
 	mm_atomic.AddUint64(&mmGetOrdersByIDs.beforeGetOrdersByIDsCounter, 1)
 	defer mm_atomic.AddUint64(&mmGetOrdersByIDs.afterGetOrdersByIDsCounter, 1)
 

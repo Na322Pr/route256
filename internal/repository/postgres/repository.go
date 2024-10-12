@@ -63,7 +63,7 @@ func (r *PgOrderRepository) UpdateOrder(ctx context.Context, orderDTO dto.OrderD
 	return nil
 }
 
-func (r *PgOrderRepository) GetOrderByID(ctx context.Context, id int) (*dto.OrderDTO, error) {
+func (r *PgOrderRepository) GetOrderByID(ctx context.Context, id int64) (*dto.OrderDTO, error) {
 	const (
 		op = "PgOrderRepository.GetOrderByID"
 
@@ -83,7 +83,7 @@ func (r *PgOrderRepository) GetOrderByID(ctx context.Context, id int) (*dto.Orde
 	return &orders[0], err
 }
 
-func (r *PgOrderRepository) GetOrdersByIDs(ctx context.Context, ids []int) (*dto.ListOrdersDTO, error) {
+func (r *PgOrderRepository) GetOrdersByIDs(ctx context.Context, ids []int64) (*dto.ListOrdersDTO, error) {
 	const (
 		op = "PgOrderRepository.GetOrdersByIDs"
 

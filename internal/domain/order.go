@@ -132,7 +132,7 @@ var OrderPackageOptions = map[OrderPackage]PackageOption{
 
 // Order
 type Order struct {
-	id         int
+	id         int64
 	clientID   int
 	storeUntil time.Time
 	status     OrderStatus
@@ -183,7 +183,7 @@ func NewOrder(orderDTO dto.AddOrder, packOpts ...PackageOption) (*Order, error) 
 }
 
 // Setters
-func (o *Order) SetID(id int) error {
+func (o *Order) SetID(id int64) error {
 	if id < 0 {
 		return ErrInvalidID
 	}
@@ -248,7 +248,7 @@ func (o *Order) SetWeight(weight int) error {
 }
 
 // Getters
-func (o *Order) GetOrderID() int {
+func (o *Order) GetOrderID() int64 {
 	return o.id
 }
 

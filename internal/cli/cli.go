@@ -73,7 +73,7 @@ Example: receive-courier 1 1 2024-10-01 15:20:00 1200 7 bag tape`,
 			}
 
 			req := dto.AddOrder{
-				ID:         orderID,
+				ID:         int64(orderID),
 				ClientID:   clientID,
 				StoreUntil: storeUntil,
 				Cost:       cost,
@@ -110,7 +110,7 @@ Example: return-courier 1`,
 				return
 			}
 
-			err = cli.orderUseCase.ReturnOrderToCourier(cmd.Context(), orderID)
+			err = cli.orderUseCase.ReturnOrderToCourier(cmd.Context(), int64(orderID))
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -133,7 +133,7 @@ Example: give-out-client 1 2 3 4`,
 				return
 			}
 
-			var orderIDs []int
+			var orderIDs []int64
 
 			for i := 0; i < len(args); i++ {
 				orderID, err := strconv.Atoi(args[i])
@@ -142,7 +142,7 @@ Example: give-out-client 1 2 3 4`,
 					return
 				}
 
-				orderIDs = append(orderIDs, orderID)
+				orderIDs = append(orderIDs, int64(orderID))
 			}
 
 			err := cli.orderUseCase.GiveOrderToClient(cmd.Context(), orderIDs)
@@ -219,7 +219,7 @@ Example: refund-client 10 12`,
 				return
 			}
 
-			err = cli.orderUseCase.GetRefundFromСlient(cmd.Context(), clientID, orderID)
+			err = cli.orderUseCase.GetRefundFromСlient(cmd.Context(), clientID, int64(orderID))
 			if err != nil {
 				fmt.Println(err)
 				return
