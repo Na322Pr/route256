@@ -11,12 +11,29 @@ import "google/api/annotations.proto";
 import "validate/validate.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Пункт выдачи заказов";
+    version: "1.0.0";
+    description: "Сервис для учета заказов на пунктах выдачи";
+  };
+  host: "localhost:7000";
+  schemes: HTTP;
+  consumes: "application/json";
+  produces: "application/json";
+};
+
 
 service PVZService {
   rpc ReceiveCourier(ReceiveCourierRequest) returns (ReceiveCourierResponse){
     option (google.api.http) = {
       post: "/ReceiveCourier"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Получение/добавление нового заказа от курьера";
+      description: "Получает идентификатор заказа, идентификатор клиента, идентификатор заказа, время хранения, вес, стоимость, типы упаковки";
     };
   };
 
@@ -25,12 +42,22 @@ service PVZService {
       post: "/ReturnCourier"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Возврат заказа курьеру";
+      description: "Принимает идентификатор заказа";
+    };
   }
   
   rpc GiveOutClient(GiveOutClientRequest) returns (GiveOutClientResponse){
     option (google.api.http) = {
       post: "/GiveOutClient"
       body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Выдача заказа клиенту";
+      description: "Принимает идентификаторы заказов";
     };
   }
   
@@ -39,17 +66,32 @@ service PVZService {
       post: "/RefundClient"
       body: "*"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Принятие возврата от клиента";
+      description: "Принимает идентификатор пользователя, идентификатор заказа";
+    };
   }
   
   rpc OrderList(OrderListRequest) returns (OrderListResponse){
     option (google.api.http) = {
       get: "/OrderList"
     };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Список заказов на выдачу для пользователя";
+      description: "Принимает идентификатор пользователя";
+    };
   }
 
   rpc RefundList(RefundListRequest) returns (RefundListResponse){
     option (google.api.http) = {
       get: "/RefundList"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Список заказов, возвращенных клиентами";
+      description: "Принимает количество и отступ";
     };
   }
 }
@@ -138,12 +180,12 @@ message OrderListRequest{
   ];
 
   optional int32 limit = 2 [
-    (validate.rules).int32.gt = 0,
+    (validate.rules).int32.gt = -1,
     (google.api.field_behavior) = OPTIONAL
   ];
 
   int64 offset = 3 [
-    (validate.rules).int64.gt = 0,
+    (validate.rules).int64.gt = -1,
     (google.api.field_behavior) = OPTIONAL
   ];
 }
@@ -154,12 +196,12 @@ message OrderListResponse{
 
 message RefundListRequest{
   optional int32 limit = 1 [
-    (validate.rules).int32.gt = 0,
+    (validate.rules).int32.gt = -1,
     (google.api.field_behavior) = OPTIONAL
   ];
 
   optional int64 offset = 2 [
-    (validate.rules).int64.gt = 0,
+    (validate.rules).int64.gt = -1,
     (google.api.field_behavior) = OPTIONAL
   ];
 }

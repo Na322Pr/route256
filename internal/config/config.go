@@ -9,8 +9,10 @@ import (
 )
 
 type Config struct {
-	PG   `yaml:"postgres"`
-	GRPC `yaml:"grpc"`
+	PG    `yaml:"postgres"`
+	GRPC  `yaml:"grpc"`
+	HTTP  `yaml:"http"`
+	Admin `yaml:"admin"`
 }
 
 type PG struct {
@@ -23,7 +25,14 @@ type PG struct {
 
 type GRPC struct {
 	Host string `yaml:"host"`
-	Port string `yaml:"port"`
+}
+
+type HTTP struct {
+	Host string `yaml:"host"`
+}
+
+type Admin struct {
+	Host string `yaml:"host"`
 }
 
 func MustLoad() *Config {

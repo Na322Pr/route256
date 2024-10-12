@@ -5,6 +5,7 @@ go 1.22.5
 require (
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
 	github.com/georgysavva/scany/v2 v2.1.3
+	github.com/go-chi/chi v1.5.5
 	github.com/gojuno/minimock/v3 v3.4.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0

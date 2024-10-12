@@ -211,10 +211,14 @@ func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID int, 
 func (uc *OrderUseCase) RefundList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) {
 	op := "OrderUseCase.RefundList"
 
+	fmt.Println(limit, offset)
+
 	refundsDTO, err := uc.repo.GetRefundsList(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
+	fmt.Println(refundsDTO)
 
 	return refundsDTO, nil
 }

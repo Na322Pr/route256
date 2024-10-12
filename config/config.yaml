@@ -5,6 +5,11 @@ postgres:
   user: "postgres"
   password: "postgres"
 
+http:
+  host: "localhost:7000"
+
 grpc:
-  host: "localhost"
-  port: 7001
+  host: "localhost:7001"
+
+admin:
+  host: "localhost:7002"

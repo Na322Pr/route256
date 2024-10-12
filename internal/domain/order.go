@@ -295,7 +295,7 @@ func (o *Order) ToDTO() dto.OrderDTO {
 		Status:     OrderStatusMap[o.status],
 		Cost:       o.cost,
 		Weight:     o.weight,
-		PickUpTime: sql.NullTime{Time: o.pickUpTime},
+		PickUpTime: sql.NullTime{Time: o.pickUpTime, Valid: true},
 	}
 
 	for _, packageType := range o.packages {

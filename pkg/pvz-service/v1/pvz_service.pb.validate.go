@@ -1188,10 +1188,10 @@ func (m *OrderListRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if m.GetOffset() <= 0 {
+	if m.GetOffset() <= -1 {
 		err := OrderListRequestValidationError{
 			field:  "Offset",
-			reason: "value must be greater than 0",
+			reason: "value must be greater than -1",
 		}
 		if !all {
 			return err
@@ -1201,10 +1201,10 @@ func (m *OrderListRequest) validate(all bool) error {
 
 	if m.Limit != nil {
 
-		if m.GetLimit() <= 0 {
+		if m.GetLimit() <= -1 {
 			err := OrderListRequestValidationError{
 				field:  "Limit",
-				reason: "value must be greater than 0",
+				reason: "value must be greater than -1",
 			}
 			if !all {
 				return err
@@ -1452,10 +1452,10 @@ func (m *RefundListRequest) validate(all bool) error {
 
 	if m.Limit != nil {
 
-		if m.GetLimit() <= 0 {
+		if m.GetLimit() <= -1 {
 			err := RefundListRequestValidationError{
 				field:  "Limit",
-				reason: "value must be greater than 0",
+				reason: "value must be greater than -1",
 			}
 			if !all {
 				return err
@@ -1467,10 +1467,10 @@ func (m *RefundListRequest) validate(all bool) error {
 
 	if m.Offset != nil {
 
-		if m.GetOffset() <= 0 {
+		if m.GetOffset() <= -1 {
 			err := RefundListRequestValidationError{
 				field:  "Offset",
-				reason: "value must be greater than 0",
+				reason: "value must be greater than -1",
 			}
 			if !all {
 				return err

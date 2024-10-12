@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/go-chi/chi"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/mw"
@@ -26,11 +29,16 @@ func main() {
 	cfg := config.MustLoad()
 
 	psqlDSN := getPsqlDSN(cfg)
-	grpcHost := fmt.Sprintf("%s:%s", cfg.GRPC.Host, cfg.GRPC.Port)
+	httpHost := cfg.HTTP.Host
+	grpcHost := cfg.GRPC.Host
+	adminHost := cfg.Admin.Host
 
 	ctx := context.Background()
 	ctxWithCancel, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
 	pool, err := pgxpool.New(ctxWithCancel, psqlDSN)
 	if err != nil {
@@ -58,13 +66,39 @@ func main() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	})
 	if err != nil {
-		log.Fatal("failed t register telephone service handler: %w", err)
+		log.Fatal("failed to register telephone service handler: %w", err)
 	}
 
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	fmt.Println("Starting http server...")
+	go func() {
+		if err := http.ListenAndServe(httpHost, mux); err != nil {
+			log.Fatalf("failed to listen and serve http service: %v", err)
+		}
+	}()
 
+	fmt.Println("Starting admin server...")
+	go func() {
+		adminServer := chi.NewMux()
+		adminServer.HandleFunc("/swagger.json", func(w http.ResponseWriter, r *http.Request) {
+			b, _ := os.ReadFile("./pkg/pvz-service/v1/pvz_service.swagger.json")
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(b)
+		})
+		if err := http.ListenAndServe(adminHost, adminServer); err != nil {
+			log.Fatalf("failed to listen and server admin server: %v", err)
+		}
+	}()
+
+	fmt.Println("Starting grpc server...")
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("failed to listen and server grpc server: %v", err)
+		}
+	}()
+
+	<-stop
+	fmt.Println("\nShutting down servers...")
+	os.Exit(0)
 }
 
 func getPsqlDSN(cfg *config.Config) string {

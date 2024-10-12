@@ -122,7 +122,7 @@ func (r *PgOrderRepository) GetClientOrdersList(ctx context.Context, clientID in
 func (r *PgOrderRepository) GetRefundsList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) {
 	const op = "PgOrderRepository.GetRefundsList"
 
-	orders := make([]dto.OrderDTO, 1)
+	orders := make([]dto.OrderDTO, 0, limit)
 
 	query := "select * from orders where status = $1 order by order_id "
 	params := []any{domain.OrderStatusMap[domain.OrderStatusRefunded]}

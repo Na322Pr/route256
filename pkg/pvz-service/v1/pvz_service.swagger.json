@@ -1,13 +1,18 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "pvz-service/v1/pvz_service.proto",
-    "version": "version not set"
+    "title": "Пункт выдачи заказов",
+    "description": "Сервис для учета заказов на пунктах выдачи",
+    "version": "1.0.0"
   },
   "tags": [
     {
       "name": "PVZService"
     }
+  ],
+  "host": "localhost:7000",
+  "schemes": [
+    "http"
   ],
   "consumes": [
     "application/json"
@@ -18,6 +23,8 @@
   "paths": {
     "/GiveOutClient": {
       "post": {
+        "summary": "Выдача заказа клиенту",
+        "description": "Принимает идентификаторы заказов",
         "operationId": "PVZService_GiveOutClient",
         "responses": {
           "200": {
@@ -50,6 +57,8 @@
     },
     "/OrderList": {
       "get": {
+        "summary": "Список заказов на выдачу для пользователя",
+        "description": "Принимает идентификатор пользователя",
         "operationId": "PVZService_OrderList",
         "responses": {
           "200": {
@@ -95,6 +104,8 @@
     },
     "/ReceiveCourier": {
       "post": {
+        "summary": "Получение/добавление нового заказа от курьера",
+        "description": "Получает идентификатор заказа, идентификатор клиента, идентификатор заказа, время хранения, вес, стоимость, типы упаковки",
         "operationId": "PVZService_ReceiveCourier",
         "responses": {
           "200": {
@@ -127,6 +138,8 @@
     },
     "/RefundClient": {
       "post": {
+        "summary": "Принятие возврата от клиента",
+        "description": "Принимает идентификатор пользователя, идентификатор заказа",
         "operationId": "PVZService_RefundClient",
         "responses": {
           "200": {
@@ -159,6 +172,8 @@
     },
     "/RefundList": {
       "get": {
+        "summary": "Список заказов, возвращенных клиентами",
+        "description": "Принимает количество и отступ",
         "operationId": "PVZService_RefundList",
         "responses": {
           "200": {
@@ -197,6 +212,8 @@
     },
     "/ReturnCourier": {
       "post": {
+        "summary": "Возврат заказа курьеру",
+        "description": "Принимает идентификатор заказа",
         "operationId": "PVZService_ReturnCourier",
         "responses": {
           "200": {
