@@ -1,16 +1,14 @@
 GO=go
-APP_NAME=pvz-cli-app
+
+APP_NAME=pvz-service
+CLI_APP_NAME=pvz-cli-app
+
 BUILD_DIR=$(CURDIR)/build
 
 OUT_PATH:=$(CURDIR)/pkg
 LOCAL_BIN:=$(CURDIR)/bin
 
 CONFIG_PATH=./config/config.yaml
-
-
-# -----------------------
-# 
-# -----------------------
 
 POSTGRES_DB=postgres
 POSTGRES_HOST=localhost
@@ -21,22 +19,25 @@ POSTGRES_PASSWORD=postgres
 POSTGRES_DSN=postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=disable
 
 
-# -----------------------
-# Запуск приложения на Go
-# -----------------------
+# ----
+# Цели
+# ----
 
-build: clean
-	$(GO) build -o $(BUILD_DIR)/$(APP_NAME) cmd/main.go
+all: clean deps generate build run
 
+build: clean-build
+	$(GO) build -o $(BUILD_DIR)/$(APP_NAME) cmd/pvz-service/main.go
+	$(GO) build -o $(BUILD_DIR)/$(CLI_APP_NAME) cmd/pvz-cli/main.go
+
+# Запуск сервера
 run:
-# ./$(BUILD_DIR)/$(APP_NAME) --config="$(CONFIG_PATH)"
-	go run ./cmd/pvz-service/main.go --config="$(CONFIG_PATH)"
+	$(BUILD_DIR)/$(APP_NAME) --config="$(CONFIG_PATH)"
 
+# Запуск CLI
 run-cli: 
-	go run ./cmd/pvz-cli/main.go --config="$(CONFIG_PATH)"
+	$(BUILD_DIR)/$(CLI_APP_NAME) --config="$(CONFIG_PATH)" 
 
-install:
-	@echo "Installing dependencies..."
+deps: bin-deps
 	$(GO) mod tidy
 	$(GO) install github.com/uudashr/gocognit/cmd/gocognit@latest
 	$(GO) install github.com/fzipp/gocyclo/cmd/gocyclo@latest
@@ -62,8 +63,20 @@ coverage:
 coverage_html: coverage
 	$(GO) tool cover -html=coverage.out
 
-clean: 
-	rm -rf $(BUILD_DIR)/$(APP_NAME)
+# -------
+# Очистка
+# -------
+
+clean: clean-vendor clean-bin clean-build
+
+clean-bin: 
+	rm -rf bin/
+
+clean-vendor: 
+	rm -rf vendor.protogen/
+
+clean-build: 
+	rm -rf $(BUILD_DIR)/
 
 # ---------------------------
 # Запуск базы данных в Docker
