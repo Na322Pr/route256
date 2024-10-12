@@ -23,7 +23,7 @@ POSTGRES_DSN=postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)
 # Цели
 # ----
 
-all: clean deps generate build run
+all: clean deps generate build swagger run
 
 build: clean-build
 	$(GO) build -o $(BUILD_DIR)/$(APP_NAME) cmd/pvz-service/main.go
@@ -39,6 +39,7 @@ run-cli:
 
 deps: bin-deps
 	$(GO) mod tidy
+	$(GO) install github.com/swaggo/swag/cmd/swag@latest
 	$(GO) install github.com/uudashr/gocognit/cmd/gocognit@latest
 	$(GO) install github.com/fzipp/gocyclo/cmd/gocyclo@latest
 
@@ -62,6 +63,9 @@ coverage:
 
 coverage_html: coverage
 	$(GO) tool cover -html=coverage.out
+
+swagger: 
+	cd cmd/pvz-service && swag init
 
 # -------
 # Очистка

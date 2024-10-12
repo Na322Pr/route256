@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/mw"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/pvz_service"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/config"
@@ -84,6 +85,11 @@ func main() {
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(b)
 		})
+
+		adminServer.Get("/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL("http://localhost:7002/swagger.json"),
+		))
+
 		if err := http.ListenAndServe(adminHost, adminServer); err != nil {
 			log.Fatalf("failed to listen and server admin server: %v", err)
 		}
