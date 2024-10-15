@@ -49,6 +49,7 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
 					Cost:       1000,
 					Weight:     5,
+					PickUpTime: sql.NullTime{Valid: true},
 				}
 
 				facadeMock.AddOrderMock.Expect(minimock.AnyContext, order).Return(nil)
@@ -75,6 +76,7 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Status:     domain.OrderStatusMap[domain.OrderStatusReceived],
 					Cost:       1000,
 					Weight:     5,
+					PickUpTime: sql.NullTime{Valid: true},
 				}
 				facadeMock.AddOrderMock.Expect(minimock.AnyContext, order).Return(postgres.ErrAlreadyExist)
 			},
@@ -131,6 +133,7 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 					ClientID:   10,
 					StoreUntil: successStoreTime,
 					Status:     domain.OrderStatusMap[domain.OrderStatusDelete],
+					PickUpTime: sql.NullTime{Valid: true},
 				}
 				facadeMock.UpdateOrderMock.Expect(minimock.AnyContext, updateOrder).Return(nil)
 			},

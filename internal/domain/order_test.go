@@ -33,7 +33,6 @@ func TestNewOrder(t *testing.T) {
 					Cost:       1000,
 					Weight:     5,
 				},
-				packOpts:    []PackageOption{},
 				domainError: nil,
 			},
 			want: &Order{
@@ -55,8 +54,8 @@ func TestNewOrder(t *testing.T) {
 					StoreUntil: successStoreTime,
 					Cost:       1000,
 					Weight:     5,
+					Packages:   []string{"bag", "tape"},
 				},
-				packOpts:    []PackageOption{PackBag(), PackTape()},
 				domainError: nil,
 			},
 			want: &Order{
@@ -80,7 +79,6 @@ func TestNewOrder(t *testing.T) {
 					Cost:       1000,
 					Weight:     5,
 				},
-				packOpts:    []PackageOption{},
 				domainError: ErrInvalidID,
 			},
 			wantErr: true,
@@ -95,7 +93,6 @@ func TestNewOrder(t *testing.T) {
 					Cost:       1000,
 					Weight:     5,
 				},
-				packOpts:    []PackageOption{},
 				domainError: ErrInvalidClientID,
 			},
 			wantErr: true,
@@ -110,7 +107,6 @@ func TestNewOrder(t *testing.T) {
 					Cost:       -120,
 					Weight:     5,
 				},
-				packOpts:    []PackageOption{},
 				domainError: ErrInvalidCost,
 			},
 			wantErr: true,
@@ -125,7 +121,6 @@ func TestNewOrder(t *testing.T) {
 					Cost:       1000,
 					Weight:     -15,
 				},
-				packOpts:    []PackageOption{},
 				domainError: ErrInvalidWeight,
 			},
 			wantErr: true,
@@ -150,7 +145,7 @@ func TestNewOrder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := NewOrder(tt.args.orderDTO, tt.args.packOpts...)
+			got, err := NewOrder(tt.args.orderDTO)
 			if tt.wantErr {
 				assert.ErrorIs(t, err, tt.args.domainError)
 				return

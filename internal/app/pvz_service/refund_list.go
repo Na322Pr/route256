@@ -2,7 +2,6 @@ package pvz_service
 
 import (
 	"context"
-	"fmt"
 
 	desc "gitlab.ozon.dev/marchenkosasha2/homework/pkg/pvz-service/v1"
 	"google.golang.org/grpc/codes"
@@ -19,8 +18,6 @@ func (s *Implementation) RefundList(ctx context.Context, req *desc.RefundListReq
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-
-	fmt.Println(orders)
 
 	respRefundList := make([]*desc.Order, 0, len(orders.Orders))
 

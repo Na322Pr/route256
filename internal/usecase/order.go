@@ -30,12 +30,7 @@ func NewOrderUseCase(repo Facade) *OrderUseCase {
 func (uc *OrderUseCase) ReceiveOrderFromCourier(ctx context.Context, req dto.AddOrder) error {
 	op := "OrderUseCase.ReceiveOrderFromCourier"
 
-	order, err := domain.NewOrder(
-		req,
-		domain.OrderPackageOptions[domain.OrderPackageStringMap[req.Packages[0]]],
-		domain.OrderPackageOptions[domain.OrderPackageStringMap[req.Packages[1]]],
-	)
-
+	order, err := domain.NewOrder(req)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

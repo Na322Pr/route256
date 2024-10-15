@@ -55,13 +55,13 @@ gocyclo:
 	@echo "Checking gocyclo..."
 	gocyclo -over 5 .
 
-test:
+test: clean
 	$(GO) test ./...
 
-coverage: 
+coverage: clean
 	$(GO) test -coverprofile=coverage.out ./...
 
-coverage_html: coverage
+coverage-html: coverage
 	$(GO) tool cover -html=coverage.out
 
 swagger: 
@@ -71,7 +71,10 @@ swagger:
 # Очистка
 # -------
 
-clean: clean-vendor clean-bin clean-build
+clean: clean-vendor clean-bin clean-build clean-docs
+
+clean-docs: 
+	rm -rf cmd/pvz-service/docs
 
 clean-bin: 
 	rm -rf bin/

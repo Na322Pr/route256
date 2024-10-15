@@ -142,7 +142,7 @@ type Order struct {
 	pickUpTime time.Time
 }
 
-func NewOrder(orderDTO dto.AddOrder, packOpts ...PackageOption) (*Order, error) {
+func NewOrder(orderDTO dto.AddOrder) (*Order, error) {
 	op := "Order.NewOrder"
 
 	order := Order{}
@@ -168,7 +168,9 @@ func NewOrder(orderDTO dto.AddOrder, packOpts ...PackageOption) (*Order, error) 
 		return nil, err
 	}
 
-	for _, opt := range packOpts {
+	for _, orderPackage := range orderDTO.Packages {
+		opt := OrderPackageOptions[OrderPackageStringMap[orderPackage]]
+
 		if opt == nil {
 			continue
 		}
