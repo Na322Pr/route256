@@ -1,0 +1,211 @@
+syntax = "proto3";
+
+package pvz;
+
+option go_package = "gitlab.ozon.dev/marchenkosasha2/homework/pkg/pvz-service;pvz_service";
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Пункт выдачи заказов";
+    version: "1.0.0";
+    description: "Сервис для учета заказов на пунктах выдачи";
+  };
+  host: "localhost:7000";
+  schemes: HTTP;
+  consumes: "application/json";
+  produces: "application/json";
+};
+
+
+service PVZService {
+  rpc ReceiveCourier(ReceiveCourierRequest) returns (ReceiveCourierResponse){
+    option (google.api.http) = {
+      post: "/ReceiveCourier"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Получение/добавление нового заказа от курьера";
+      description: "Получает идентификатор заказа, идентификатор клиента, идентификатор заказа, время хранения, вес, стоимость, типы упаковки";
+    };
+  };
+
+  rpc ReturnCourier(ReturnCourierRequest) returns (ReturnCourierResponse){
+    option (google.api.http) = {
+      post: "/ReturnCourier"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Возврат заказа курьеру";
+      description: "Принимает идентификатор заказа";
+    };
+  }
+  
+  rpc GiveOutClient(GiveOutClientRequest) returns (GiveOutClientResponse){
+    option (google.api.http) = {
+      post: "/GiveOutClient"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Выдача заказа клиенту";
+      description: "Принимает идентификаторы заказов";
+    };
+  }
+  
+  rpc RefundClient(RefundClientRequest) returns (RefundClientResponse){
+    option (google.api.http) = {
+      post: "/RefundClient"
+      body: "*"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Принятие возврата от клиента";
+      description: "Принимает идентификатор пользователя, идентификатор заказа";
+    };
+  }
+  
+  rpc OrderList(OrderListRequest) returns (OrderListResponse){
+    option (google.api.http) = {
+      get: "/OrderList"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Список заказов на выдачу для пользователя";
+      description: "Принимает идентификатор пользователя";
+    };
+  }
+
+  rpc RefundList(RefundListRequest) returns (RefundListResponse){
+    option (google.api.http) = {
+      get: "/RefundList"
+    };
+
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Список заказов, возвращенных клиентами";
+      description: "Принимает количество и отступ";
+    };
+  }
+}
+
+
+message Order {
+  int64 id = 1;
+  int32 client_id = 2;
+  google.protobuf.Timestamp store_until = 3;
+  string status = 4;
+  int32 cost = 5;
+  int32 weight = 6;
+  repeated string packages = 7;
+  google.protobuf.Timestamp pick_up_time = 8;
+}
+
+message ReceiveCourierRequest{
+  int64 order_id = 1 [
+    (validate.rules).int64.gt = 0,
+    (google.api.field_behavior) = REQUIRED
+  ];
+  int32 client_id = 2 [
+    (validate.rules).int32.gt = 0,
+    (google.api.field_behavior) = REQUIRED
+  ];
+  google.protobuf.Timestamp store_until = 3 [
+    (google.api.field_behavior) = REQUIRED
+  ];
+  int32 cost = 4 [
+    (validate.rules).int32.gt = 0,
+    (google.api.field_behavior) = REQUIRED
+  ];
+  int32 weight = 5 [
+    (validate.rules).int32.gt = 0,
+    (google.api.field_behavior) = REQUIRED
+  ];
+  repeated string packages = 6;
+}
+
+message ReceiveCourierResponse{
+  
+}
+
+message ReturnCourierRequest{
+  int64 order_id = 1 [
+    (validate.rules).int64.gt = 0,
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+message ReturnCourierResponse{
+  
+}
+
+message GiveOutClientRequest{
+  repeated int64 orders_ids = 1 [
+    (validate.rules).repeated.unique = true,
+    (validate.rules).repeated.min_items = 1,
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+message GiveOutClientResponse{
+    
+}
+
+message RefundClientRequest{
+  int64 order_id = 1 [
+    (validate.rules).int64.gt = 0,
+    (google.api.field_behavior) = REQUIRED
+  ];
+  int32 client_id = 2 [
+    (validate.rules).int32.gt = 0,
+    (google.api.field_behavior) = REQUIRED
+  ];
+}
+
+message RefundClientResponse{
+    
+}
+
+message OrderListRequest{
+  int32 client_id = 1 [
+    (validate.rules).int32.gt = 0,
+    (google.api.field_behavior) = REQUIRED
+  ];
+
+  optional int32 limit = 2 [
+    (validate.rules).int32.gt = -1,
+    (google.api.field_behavior) = OPTIONAL
+  ];
+
+  int64 offset = 3 [
+    (validate.rules).int64.gt = -1,
+    (google.api.field_behavior) = OPTIONAL
+  ];
+}
+
+message OrderListResponse{
+  repeated Order orders = 1;
+}
+
+message RefundListRequest{
+  optional int32 limit = 1 [
+    (validate.rules).int32.gt = -1,
+    (google.api.field_behavior) = OPTIONAL
+  ];
+
+  optional int64 offset = 2 [
+    (validate.rules).int64.gt = -1,
+    (google.api.field_behavior) = OPTIONAL
+  ];
+}
+
+message RefundListResponse{
+  repeated Order orders = 1;
+}
