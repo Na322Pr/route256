@@ -8,6 +8,7 @@ import (
 
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
 )
 
 type Facade interface {
@@ -21,10 +22,14 @@ type Facade interface {
 
 type OrderUseCase struct {
 	repo Facade
+	prod event.EventLogProducer
 }
 
-func NewOrderUseCase(repo Facade) *OrderUseCase {
-	return &OrderUseCase{repo: repo}
+func NewOrderUseCase(repo Facade, prod event.EventLogProducer) *OrderUseCase {
+	return &OrderUseCase{
+		repo: repo,
+		prod: prod,
+	}
 }
 
 func (uc *OrderUseCase) ReceiveOrderFromCourier(ctx context.Context, req dto.AddOrder) error {
@@ -37,6 +42,10 @@ func (uc *OrderUseCase) ReceiveOrderFromCourier(ctx context.Context, req dto.Add
 
 	err = uc.repo.AddOrder(ctx, order.ToDTO())
 	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := uc.prod.ProduceEvent(order.ToDTO(), event.EventTypeReceive); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -114,6 +123,12 @@ func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int64)
 	}
 
 	uc.giveClientPool(ctx, orders)
+
+	for _, order := range orders {
+		if err := uc.prod.ProduceEvent(order.ToDTO(), event.EventTypeGiveOut); err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	}
 
 	return nil
 }
@@ -197,6 +212,10 @@ func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID int, 
 
 	order.SetStatus(domain.OrderStatusRefunded)
 	if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := uc.prod.ProduceEvent(order.ToDTO(), event.EventTypeRefund); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 

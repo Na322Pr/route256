@@ -13,3 +13,7 @@ grpc:
 
 admin:
   host: "localhost:7002"
+
+kafka:
+  brokers: 
+    - "localhost:9092"
