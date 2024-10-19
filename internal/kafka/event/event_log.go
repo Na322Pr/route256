@@ -23,13 +23,17 @@ type Event struct {
 	OperationMoment time.Time    `json:"moment"`
 }
 
+type ProdFacade interface {
+	SendMessage(msg *sarama.ProducerMessage) (partition int32, offset int64, err error)
+}
+
 type EventLogProducer struct {
-	prod    sarama.SyncProducer
+	prod    ProdFacade
 	topic   string
 	appName string
 }
 
-func NewEventLogProducer(prod sarama.SyncProducer, topic, appName string) (*EventLogProducer, error) {
+func NewEventLogProducer(prod ProdFacade, topic, appName string) (*EventLogProducer, error) {
 	return &EventLogProducer{
 		prod:    prod,
 		topic:   topic,
