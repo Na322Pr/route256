@@ -20,12 +20,16 @@ type Facade interface {
 	GetRefundsList(ctx context.Context, limit, offset int) (*dto.ListOrdersDTO, error) // Update() error
 }
 
-type OrderUseCase struct {
-	repo Facade
-	prod event.EventLogProducer
+type EventLogProducerFacade interface {
+	ProduceEvent(order dto.OrderDTO, eventType event.EventType) error
 }
 
-func NewOrderUseCase(repo Facade, prod event.EventLogProducer) *OrderUseCase {
+type OrderUseCase struct {
+	repo Facade
+	prod EventLogProducerFacade
+}
+
+func NewOrderUseCase(repo Facade, prod EventLogProducerFacade) *OrderUseCase {
 	return &OrderUseCase{
 		repo: repo,
 		prod: prod,

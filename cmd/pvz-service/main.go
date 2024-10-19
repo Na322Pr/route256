@@ -69,7 +69,7 @@ func main() {
 	}
 
 	facade := repository.NewFacade(pool)
-	orderUseCase := usecase.NewOrderUseCase(facade, *eventLogProd)
+	orderUseCase := usecase.NewOrderUseCase(facade, eventLogProd)
 	pvzService := pvz_service.NewImplementation(*orderUseCase)
 
 	lis, err := net.Listen("tcp", grpcHost)
