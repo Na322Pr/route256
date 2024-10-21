@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository/postgres"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase/mock"
@@ -23,9 +24,12 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 	successStoreTime := time.Now().Add(48 * time.Hour)
 
 	tests := []struct {
-		name     string
-		args     args
-		setup    func(*mock.FacadeMock)
+		name  string
+		args  args
+		setup func(
+			*mock.FacadeMock,
+			*mock.EventLogProducerFacadeMock,
+		)
 		wantErr  bool
 		errValue error
 	}{
@@ -41,7 +45,10 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Packages:   []string{"unknown", "unknown"},
 				},
 			},
-			setup: func(facadeMock *mock.FacadeMock) {
+			setup: func(
+				facadeMock *mock.FacadeMock,
+				prodMock *mock.EventLogProducerFacadeMock,
+			) {
 				order := dto.OrderDTO{
 					ID:         1,
 					ClientID:   1,
@@ -53,6 +60,8 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 				}
 
 				facadeMock.AddOrderMock.Expect(minimock.AnyContext, order).Return(nil)
+
+				prodMock.ProduceEventMock.Expect(order, event.EventTypeReceive).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -68,7 +77,10 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 					Packages:   []string{"unknown", "unknown"},
 				},
 			},
-			setup: func(facadeMock *mock.FacadeMock) {
+			setup: func(
+				facadeMock *mock.FacadeMock,
+				prodMock *mock.EventLogProducerFacadeMock,
+			) {
 				order := dto.OrderDTO{
 					ID:         1,
 					ClientID:   1,
@@ -90,10 +102,11 @@ func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {
 
 			ctrl := minimock.NewController(t)
 			facadeMock := mock.NewFacadeMock(ctrl)
+			prodMock := mock.NewEventLogProducerFacadeMock(ctrl)
 
-			tt.setup(facadeMock)
+			tt.setup(facadeMock, prodMock)
 
-			uc := usecase.NewOrderUseCase(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock, prodMock)
 
 			err := uc.ReceiveOrderFromCourier(context.Background(), tt.args.req)
 			if tt.wantErr {
@@ -192,8 +205,10 @@ func TestOrderUseCase_ReturnOrderToCourier(t *testing.T) {
 
 			ctrl := minimock.NewController(t)
 			facadeMock := mock.NewFacadeMock(ctrl)
+			prodMock := mock.NewEventLogProducerFacadeMock(ctrl)
+
 			tt.setup(facadeMock)
-			uc := usecase.NewOrderUseCase(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock, prodMock)
 
 			err := uc.ReturnOrderToCourier(context.Background(), int64(tt.args.orderID))
 			if tt.wantErr {
@@ -212,16 +227,22 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		args     args
-		setup    func(*mock.FacadeMock)
+		name  string
+		args  args
+		setup func(
+			*mock.FacadeMock,
+			*mock.EventLogProducerFacadeMock,
+		)
 		wantErr  bool
 		errValue error
 	}{
 		{
 			name: "Success_GiveOrderToClient",
 			args: args{orderIDs: []int64{10}},
-			setup: func(facadeMock *mock.FacadeMock) {
+			setup: func(
+				facadeMock *mock.FacadeMock,
+				prodMock *mock.EventLogProducerFacadeMock,
+			) {
 
 				successStoreTime := time.Now().Add(24 * time.Hour)
 
@@ -239,6 +260,7 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 				facadeMock.GetOrdersByIDsMock.Expect(minimock.AnyContext, []int64{10}).Return(orders, nil)
 				facadeMock.UpdateOrderMock.Return(nil)
 
+				prodMock.ProduceEventMock.Return(nil)
 			},
 			wantErr: false,
 		},
@@ -248,8 +270,10 @@ func TestOrderUseCase_GiveOrderToClient(t *testing.T) {
 
 			ctrl := minimock.NewController(t)
 			facadeMock := mock.NewFacadeMock(ctrl)
-			tt.setup(facadeMock)
-			uc := usecase.NewOrderUseCase(facadeMock)
+			prodMock := mock.NewEventLogProducerFacadeMock(ctrl)
+
+			tt.setup(facadeMock, prodMock)
+			uc := usecase.NewOrderUseCase(facadeMock, prodMock)
 
 			if err := uc.GiveOrderToClient(context.Background(), tt.args.orderIDs); (err != nil) != tt.wantErr {
 				t.Errorf("OrderUseCase.GiveOrderToClient() error = %v, wantErr %v", err, tt.wantErr)
@@ -329,8 +353,10 @@ func TestOrderUseCase_OrderList(t *testing.T) {
 
 			ctrl := minimock.NewController(t)
 			facadeMock := mock.NewFacadeMock(ctrl)
+			prodMock := mock.NewEventLogProducerFacadeMock(ctrl)
+
 			tt.setup(facadeMock)
-			uc := usecase.NewOrderUseCase(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock, prodMock)
 
 			got, err := uc.OrderList(context.Background(), tt.args.clientID)
 			if (err != nil) != tt.wantErr {
@@ -350,9 +376,12 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		args     args
-		setup    func(*mock.FacadeMock)
+		name  string
+		args  args
+		setup func(
+			*mock.FacadeMock,
+			*mock.EventLogProducerFacadeMock,
+		)
 		wantErr  bool
 		errValue error
 	}{
@@ -362,8 +391,10 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				clientID: 10,
 				orderID:  11,
 			},
-			setup: func(facadeMock *mock.FacadeMock) {
-
+			setup: func(
+				facadeMock *mock.FacadeMock,
+				prodMock *mock.EventLogProducerFacadeMock,
+			) {
 				pickUpTime := time.Now()
 				order := dto.OrderDTO{
 					ID:         11,
@@ -375,6 +406,7 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				facadeMock.GetOrderByIDMock.Expect(minimock.AnyContext, 11).Return(&order, nil)
 				facadeMock.UpdateOrderMock.Return(nil)
 
+				prodMock.ProduceEventMock.Return(nil)
 			},
 			wantErr: false,
 		},
@@ -384,7 +416,10 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				clientID: 10,
 				orderID:  11,
 			},
-			setup: func(facadeMock *mock.FacadeMock) {
+			setup: func(
+				facadeMock *mock.FacadeMock,
+				prodMock *mock.EventLogProducerFacadeMock,
+			) {
 
 				pickUpTime := time.Now()
 				order := dto.OrderDTO{
@@ -405,7 +440,10 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 				clientID: 10,
 				orderID:  11,
 			},
-			setup: func(facadeMock *mock.FacadeMock) {
+			setup: func(
+				facadeMock *mock.FacadeMock,
+				prodMock *mock.EventLogProducerFacadeMock,
+			) {
 				order := dto.OrderDTO{
 					ID:       11,
 					ClientID: 10,
@@ -424,8 +462,10 @@ func TestOrderUseCase_GetRefundFromСlient(t *testing.T) {
 
 			ctrl := minimock.NewController(t)
 			facadeMock := mock.NewFacadeMock(ctrl)
-			tt.setup(facadeMock)
-			uc := usecase.NewOrderUseCase(facadeMock)
+			prodMock := mock.NewEventLogProducerFacadeMock(ctrl)
+
+			tt.setup(facadeMock, prodMock)
+			uc := usecase.NewOrderUseCase(facadeMock, prodMock)
 
 			err := uc.GetRefundFromСlient(context.Background(), tt.args.clientID, tt.args.orderID)
 
@@ -511,8 +551,10 @@ func TestOrderUseCase_RefundList(t *testing.T) {
 
 			ctrl := minimock.NewController(t)
 			facadeMock := mock.NewFacadeMock(ctrl)
+			prodMock := mock.NewEventLogProducerFacadeMock(ctrl)
+
 			tt.setup(facadeMock)
-			uc := usecase.NewOrderUseCase(facadeMock)
+			uc := usecase.NewOrderUseCase(facadeMock, prodMock)
 
 			got, err := uc.RefundList(context.Background(), tt.args.limit, tt.args.offset)
 			if (err != nil) != tt.wantErr {

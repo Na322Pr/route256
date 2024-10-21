@@ -9,7 +9,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/go-chi/chi"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -17,6 +19,8 @@ import (
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/mw"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/pvz_service"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/config"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/producer"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 	"google.golang.org/grpc"
@@ -47,8 +51,25 @@ func main() {
 	}
 	defer pool.Close()
 
+	prod, err := producer.NewSyncProducer(cfg.Kafka,
+		producer.WithRequiredAcks(sarama.WaitForLocal),
+		producer.WithMaxOpenRequests(1),
+		producer.WithMaxRetries(5),
+		producer.WithRetryBackoff(10*time.Millisecond),
+		producer.WithProducerPartitioner(sarama.NewHashPartitioner),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer prod.Close()
+
+	eventLogProd, err := event.NewEventLogProducer(prod, "pvz.events-log", "pvz-service")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	facade := repository.NewFacade(pool)
-	orderUseCase := usecase.NewOrderUseCase(facade)
+	orderUseCase := usecase.NewOrderUseCase(facade, eventLogProd)
 	pvzService := pvz_service.NewImplementation(*orderUseCase)
 
 	lis, err := net.Listen("tcp", grpcHost)

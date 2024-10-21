@@ -90,19 +90,20 @@ clean-build:
 # ---------------------------
 
 compose-up:
-	docker-compose up -d postgres
+# docker-compose up -d postgres
+	docker-compose up -d
 
 compose-down:
 	docker-compose down
 
 compose-stop:
-	docker-compose stop postgres
+	docker-compose stop
 
 compose-start:
-	docker-compose start postgres
+	docker-compose start
 
 compose-ps:
-	docker-compose ps postgres
+	docker-compose ps
 
 # ---------------------------
 # Запуск миграций через Goose

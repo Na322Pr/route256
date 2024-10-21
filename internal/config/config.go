@@ -13,6 +13,7 @@ type Config struct {
 	GRPC  `yaml:"grpc"`
 	HTTP  `yaml:"http"`
 	Admin `yaml:"admin"`
+	Kafka `yaml:"kafka"`
 }
 
 type PG struct {
@@ -33,6 +34,10 @@ type HTTP struct {
 
 type Admin struct {
 	Host string `yaml:"host"`
+}
+
+type Kafka struct {
+	Brokers []string `yaml:"brokers"`
 }
 
 func MustLoad() *Config {
