@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/mw"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/pvz_service"
@@ -91,6 +92,8 @@ func main() {
 		log.Fatal("failed to register telephone service handler: %w", err)
 	}
 
+	mux.HandlePath("GET", "/metrics", prometheusHandler())
+
 	fmt.Println("Starting http server...")
 	go func() {
 		if err := http.ListenAndServe(httpHost, mux); err != nil {
@@ -136,4 +139,10 @@ func getPsqlDSN(cfg *config.Config) string {
 		cfg.PG.Port,
 		cfg.PG.DB,
 	)
+}
+
+func prometheusHandler() runtime.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		promhttp.Handler().ServeHTTP(w, r)
+	}
 }

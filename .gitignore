@@ -159,3 +159,6 @@ fabric.properties
 
 # docs
 /cmd/pvz-service/docs
+
+# data
+/data

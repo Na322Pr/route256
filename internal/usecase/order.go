@@ -9,6 +9,7 @@ import (
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/metrics"
 )
 
 type Facade interface {
@@ -133,6 +134,8 @@ func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int64)
 			return fmt.Errorf("%s: %w", op, err)
 		}
 	}
+
+	metrics.AddIssuedOrdersTotal(len(orders), "temp")
 
 	return nil
 }

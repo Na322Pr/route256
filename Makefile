@@ -189,3 +189,12 @@ generate:
 		mv vendor.protogen/tmp/validate vendor.protogen/
 		rm -rf vendor.protogen/tmp
 
+# -----------------
+# Метрики
+# -----------------
+
+run-prometheus:
+	prometheus --config.file config/prometheus.yaml
+
+run-grafana:
+	brew services start grafana
