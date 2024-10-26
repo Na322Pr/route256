@@ -72,8 +72,8 @@ func main() {
 
 	cache := cache.NewOrderCache(1 * time.Hour)
 
-	facade := repository.NewFacade(pool)
-	orderUseCase := usecase.NewOrderUseCase(facade, eventLogProd, cache)
+	repo := repository.NewFacade(pool)
+	orderUseCase := usecase.NewOrderUseCase(repo, eventLogProd, cache)
 	pvzService := pvz_service.NewImplementation(*orderUseCase)
 
 	lis, err := net.Listen("tcp", grpcHost)
