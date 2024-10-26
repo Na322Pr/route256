@@ -289,7 +289,7 @@ func (o *Order) GetOrderPickUpTime() time.Time {
 }
 
 // DTO Conversion
-func (o *Order) ToDTO() dto.OrderDTO {
+func (o *Order) ToDTO() *dto.OrderDTO {
 	orderDTO := dto.OrderDTO{
 		ID:         o.id,
 		ClientID:   o.clientID,
@@ -304,7 +304,7 @@ func (o *Order) ToDTO() dto.OrderDTO {
 		orderDTO.Packages = append(orderDTO.Packages, OrderPackageMap[packageType])
 	}
 
-	return orderDTO
+	return &orderDTO
 }
 
 func (o *Order) FromDTO(orderDTO dto.OrderDTO) error {

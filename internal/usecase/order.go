@@ -25,15 +25,22 @@ type EventLogProducerFacade interface {
 	ProduceEvent(order dto.OrderDTO, eventType event.EventType) error
 }
 
-type OrderUseCase struct {
-	repo Facade
-	prod EventLogProducerFacade
+type OrderCacheFacade interface {
+	Get(orderID int64) (*dto.OrderDTO, bool)
+	Set(orderDTO *dto.OrderDTO, now time.Time) error
 }
 
-func NewOrderUseCase(repo Facade, prod EventLogProducerFacade) *OrderUseCase {
+type OrderUseCase struct {
+	repo  Facade
+	prod  EventLogProducerFacade
+	cache OrderCacheFacade
+}
+
+func NewOrderUseCase(repo Facade, prod EventLogProducerFacade, cache OrderCacheFacade) *OrderUseCase {
 	return &OrderUseCase{
-		repo: repo,
-		prod: prod,
+		repo:  repo,
+		prod:  prod,
+		cache: cache,
 	}
 }
 
@@ -45,12 +52,12 @@ func (uc *OrderUseCase) ReceiveOrderFromCourier(ctx context.Context, req dto.Add
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	err = uc.repo.AddOrder(ctx, order.ToDTO())
+	err = uc.repo.AddOrder(ctx, *order.ToDTO())
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := uc.prod.ProduceEvent(order.ToDTO(), event.EventTypeReceive); err != nil {
+	if err := uc.prod.ProduceEvent(*order.ToDTO(), event.EventTypeReceive); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -59,10 +66,14 @@ func (uc *OrderUseCase) ReceiveOrderFromCourier(ctx context.Context, req dto.Add
 
 func (uc *OrderUseCase) ReturnOrderToCourier(ctx context.Context, orderID int64) error {
 	op := "OrderUseCase.ReturnOrderToCourier"
+	var err error
 
-	orderDTO, err := uc.repo.GetOrderByID(ctx, orderID)
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+	orderDTO, ok := uc.cache.Get(orderID)
+	if !ok {
+		orderDTO, err = uc.repo.GetOrderByID(ctx, orderID)
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
 	}
 
 	var order domain.Order
@@ -84,7 +95,11 @@ func (uc *OrderUseCase) ReturnOrderToCourier(ctx context.Context, orderID int64)
 
 	order.SetStatus(domain.OrderStatusDelete)
 
-	if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
+	if err := uc.repo.UpdateOrder(ctx, *order.ToDTO()); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := uc.cache.Set(order.ToDTO(), time.Now()); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -130,7 +145,7 @@ func (uc *OrderUseCase) GiveOrderToClient(ctx context.Context, orderIDs []int64)
 	uc.giveClientPool(ctx, orders)
 
 	for _, order := range orders {
-		if err := uc.prod.ProduceEvent(order.ToDTO(), event.EventTypeGiveOut); err != nil {
+		if err := uc.prod.ProduceEvent(*order.ToDTO(), event.EventTypeGiveOut); err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
 	}
@@ -174,9 +189,13 @@ func (uc *OrderUseCase) giveClientWorker(ctx context.Context, wg *sync.WaitGroup
 	defer wg.Done()
 
 	for order := range orders {
-		if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
+		if err := uc.repo.UpdateOrder(ctx, *order.ToDTO()); err != nil {
 			result <- fmt.Sprintf("Order %d issue failed", order.GetOrderID())
 			continue
+		}
+
+		if err := uc.cache.Set(order.ToDTO(), time.Now()); err != nil {
+			result <- fmt.Sprintf("Order %d issue failed", order.GetOrderID())
 		}
 
 		result <- fmt.Sprintf("Order %d issued successfully", order.GetOrderID())
@@ -196,10 +215,14 @@ func (uc *OrderUseCase) OrderList(ctx context.Context, clientID int) (*dto.ListO
 
 func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID int, orderID int64) error {
 	op := "OrderUseCase.GetRefundFromСlient"
+	var err error
 
-	orderDTO, err := uc.repo.GetOrderByID(ctx, orderID)
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+	orderDTO, ok := uc.cache.Get(orderID)
+	if !ok {
+		orderDTO, err = uc.repo.GetOrderByID(ctx, orderID)
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
 	}
 
 	var order domain.Order
@@ -218,11 +241,15 @@ func (uc *OrderUseCase) GetRefundFromСlient(ctx context.Context, clientID int, 
 	}
 
 	order.SetStatus(domain.OrderStatusRefunded)
-	if err := uc.repo.UpdateOrder(ctx, order.ToDTO()); err != nil {
+	if err := uc.repo.UpdateOrder(ctx, *order.ToDTO()); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := uc.prod.ProduceEvent(order.ToDTO(), event.EventTypeRefund); err != nil {
+	if err := uc.cache.Set(order.ToDTO(), time.Now()); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := uc.prod.ProduceEvent(*order.ToDTO(), event.EventTypeRefund); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 

@@ -19,6 +19,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/mw"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/app/pvz_service"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/cache"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/config"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/producer"
@@ -69,8 +70,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	cache := cache.NewOrderCache(1 * time.Hour)
+
 	facade := repository.NewFacade(pool)
-	orderUseCase := usecase.NewOrderUseCase(facade, eventLogProd)
+	orderUseCase := usecase.NewOrderUseCase(facade, eventLogProd, cache)
 	pvzService := pvz_service.NewImplementation(*orderUseCase)
 
 	lis, err := net.Listen("tcp", grpcHost)
