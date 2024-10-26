@@ -24,6 +24,7 @@ import (
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/producer"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository"
+	"gitlab.ozon.dev/marchenkosasha2/homework/internal/tracer"
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -46,6 +47,8 @@ func main() {
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	tracer.MustSetup(ctx, "baker-bot")
 
 	pool, err := pgxpool.New(ctxWithCancel, psqlDSN)
 	if err != nil {
