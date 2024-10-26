@@ -19,7 +19,7 @@ import (
 type OrderSuite struct {
 	suite.Suite
 	pool *pgxpool.Pool
-	repo usecase.Facade
+	repo usecase.OrderRepoFacade
 }
 
 const psqlDSN = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"

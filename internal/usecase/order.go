@@ -12,7 +12,7 @@ import (
 	"gitlab.ozon.dev/marchenkosasha2/homework/internal/metrics"
 )
 
-type Facade interface {
+type OrderRepoFacade interface {
 	AddOrder(ctx context.Context, orderDTO dto.OrderDTO) error
 	UpdateOrder(ctx context.Context, orderDTO dto.OrderDTO) error
 	GetOrderByID(ctx context.Context, id int64) (*dto.OrderDTO, error)
@@ -31,12 +31,16 @@ type OrderCacheFacade interface {
 }
 
 type OrderUseCase struct {
-	repo  Facade
+	repo  OrderRepoFacade
 	prod  EventLogProducerFacade
 	cache OrderCacheFacade
 }
 
-func NewOrderUseCase(repo Facade, prod EventLogProducerFacade, cache OrderCacheFacade) *OrderUseCase {
+func NewOrderUseCase(
+	repo OrderRepoFacade,
+	prod EventLogProducerFacade,
+	cache OrderCacheFacade,
+) *OrderUseCase {
 	return &OrderUseCase{
 		repo:  repo,
 		prod:  prod,

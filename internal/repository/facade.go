@@ -86,7 +86,7 @@ func (s *StorageFacade) GetRefundsList(ctx context.Context, limit, offset int) (
 	return s.pgOrderRepository.GetRefundsList(ctx, limit, offset)
 }
 
-func NewFacade(pool *pgxpool.Pool) usecase.Facade {
+func NewFacade(pool *pgxpool.Pool) usecase.OrderRepoFacade {
 	txManager := postgres.NewTxManager(pool)
 	pgOrderRepository := postgres.NewPgOrderRepository(txManager)
 	return NewStorageFacade(txManager, pgOrderRepository)
