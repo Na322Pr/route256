@@ -2,7 +2,7 @@
 
 package mock
 
-//go:generate minimock -i gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase.OrderCacheFacade -o order_cache_facade_mock.go -n OrderCacheFacadeMock -p mock
+//go:generate minimock -i github.com/Na322Pr/route256/internal/usecase.OrderCacheFacade -o order_cache_facade_mock.go -n OrderCacheFacadeMock -p mock
 
 import (
 	"sync"
@@ -11,7 +11,7 @@ import (
 	mm_time "time"
 
 	"github.com/gojuno/minimock/v3"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
+	"github.com/Na322Pr/route256/internal/dto"
 )
 
 // OrderCacheFacadeMock implements mm_usecase.OrderCacheFacade

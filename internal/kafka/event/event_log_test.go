@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Na322Pr/route256/internal/dto"
+	"github.com/Na322Pr/route256/internal/kafka/event"
+	"github.com/Na322Pr/route256/internal/kafka/event/mock"
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/assert"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event/mock"
 )
 
 func TestEventLogProducer_ProduceEvent(t *testing.T) {

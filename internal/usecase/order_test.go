@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Na322Pr/route256/internal/domain"
+	"github.com/Na322Pr/route256/internal/dto"
+	"github.com/Na322Pr/route256/internal/kafka/event"
+	"github.com/Na322Pr/route256/internal/repository/postgres"
+	"github.com/Na322Pr/route256/internal/usecase"
+	"github.com/Na322Pr/route256/internal/usecase/mock"
 	"github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/assert"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository/postgres"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase/mock"
 )
 
 func TestOrderUseCase_ReceiveOrderFromCourier(t *testing.T) {

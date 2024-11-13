@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/metrics"
+	"github.com/Na322Pr/route256/internal/domain"
+	"github.com/Na322Pr/route256/internal/dto"
+	"github.com/Na322Pr/route256/internal/kafka/event"
+	"github.com/Na322Pr/route256/internal/metrics"
 )
 
 type OrderRepoFacade interface {

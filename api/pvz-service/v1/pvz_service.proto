@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pvz;
 
-option go_package = "gitlab.ozon.dev/marchenkosasha2/homework/pkg/pvz-service;pvz_service";
+option go_package = "github.com/Na322Pr/route256/pkg/pvz-service;pvz_service";
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/timestamp.proto";

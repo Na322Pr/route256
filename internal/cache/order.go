@@ -3,7 +3,7 @@ package cache
 import (
 	"time"
 
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
+	"github.com/Na322Pr/route256/internal/dto"
 )
 
 type OrderCache struct {

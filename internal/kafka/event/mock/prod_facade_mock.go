@@ -2,7 +2,7 @@
 
 package mock
 
-//go:generate minimock -i gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event.ProdFacade -o prod_facade_mock.go -n ProdFacadeMock -p mock
+//go:generate minimock -i github.com/Na322Pr/route256/internal/kafka/event.ProdFacade -o prod_facade_mock.go -n ProdFacadeMock -p mock
 
 import (
 	"sync"

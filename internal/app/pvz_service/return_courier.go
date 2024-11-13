@@ -3,7 +3,7 @@ package pvz_service
 import (
 	"context"
 
-	desc "gitlab.ozon.dev/marchenkosasha2/homework/pkg/pvz-service/v1"
+	desc "github.com/Na322Pr/route256/pkg/pvz-service/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

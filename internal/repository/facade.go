@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 
+	"github.com/Na322Pr/route256/internal/dto"
+	"github.com/Na322Pr/route256/internal/repository/postgres"
+	"github.com/Na322Pr/route256/internal/usecase"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository/postgres"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 )
 
 type StorageFacade struct {

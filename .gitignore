@@ -162,3 +162,6 @@ fabric.properties
 
 # data
 /data
+
+# vscode
+/.vscode

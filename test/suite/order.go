@@ -8,12 +8,12 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/Na322Pr/route256/internal/domain"
+	"github.com/Na322Pr/route256/internal/dto"
+	"github.com/Na322Pr/route256/internal/repository"
+	"github.com/Na322Pr/route256/internal/usecase"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/suite"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/repository"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
 )
 
 type OrderSuite struct {

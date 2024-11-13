@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/cli"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/config"
+	"github.com/Na322Pr/route256/internal/cli"
+	"github.com/Na322Pr/route256/internal/config"
 )
 
 func main() {

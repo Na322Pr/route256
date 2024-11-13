@@ -1,8 +1,8 @@
 package pvz_service
 
 import (
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase"
-	desc "gitlab.ozon.dev/marchenkosasha2/homework/pkg/pvz-service/v1"
+	"github.com/Na322Pr/route256/internal/usecase"
+	desc "github.com/Na322Pr/route256/pkg/pvz-service/v1"
 )
 
 type Implementation struct {

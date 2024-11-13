@@ -5,11 +5,11 @@ import (
 	"log"
 	"sync"
 
+	"github.com/Na322Pr/route256/internal/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	traceconfig "github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-lib/metrics/prometheus"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/logger"
 )
 
 func MustSetup(ctx context.Context, serviceName string) {

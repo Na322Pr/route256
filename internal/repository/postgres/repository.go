@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/Na322Pr/route256/internal/domain"
+	"github.com/Na322Pr/route256/internal/dto"
 	"github.com/georgysavva/scany/v2/pgxscan"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/domain"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
 )
 
 type PgOrderRepository struct {

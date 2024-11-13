@@ -2,7 +2,7 @@
 
 package mock
 
-//go:generate minimock -i gitlab.ozon.dev/marchenkosasha2/homework/internal/usecase.EventLogProducerFacade -o event_log_producer_facade_mock.go -n EventLogProducerFacadeMock -p mock
+//go:generate minimock -i github.com/Na322Pr/route256/internal/usecase.EventLogProducerFacade -o event_log_producer_facade_mock.go -n EventLogProducerFacadeMock -p mock
 
 import (
 	"sync"
@@ -10,8 +10,8 @@ import (
 	mm_time "time"
 
 	"github.com/gojuno/minimock/v3"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/kafka/event"
+	"github.com/Na322Pr/route256/internal/dto"
+	"github.com/Na322Pr/route256/internal/kafka/event"
 )
 
 // EventLogProducerFacadeMock implements mm_usecase.EventLogProducerFacade

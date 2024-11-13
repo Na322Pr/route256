@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Na322Pr/route256/internal/dto"
 	"github.com/stretchr/testify/assert"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
 )
 
 func TestNewOrder(t *testing.T) {

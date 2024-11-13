@@ -1,4 +1,4 @@
-module gitlab.ozon.dev/marchenkosasha2/homework
+module github.com/Na322Pr/route256
 
 go 1.22.5
 

@@ -16,8 +16,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Na322Pr/route256/internal/dto"
 	"github.com/spf13/cobra"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
 )
 
 type CLI struct {

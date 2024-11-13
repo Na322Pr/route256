@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/dto"
+	"github.com/Na322Pr/route256/internal/dto"
 )
 
 type EventType string

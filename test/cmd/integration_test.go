@@ -3,8 +3,8 @@ package test
 import (
 	"testing"
 
+	order_suite "github.com/Na322Pr/route256/test/suite"
 	"github.com/stretchr/testify/suite"
-	order_suite "gitlab.ozon.dev/marchenkosasha2/homework/test/suite"
 )
 
 func TestSuit(t *testing.T) {

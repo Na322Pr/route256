@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/IBM/sarama"
-	"gitlab.ozon.dev/marchenkosasha2/homework/internal/config"
+	"github.com/Na322Pr/route256/internal/config"
 )
 
 func NewSyncProducer(cfg config.Kafka, opts ...Option) (sarama.SyncProducer, error) {
